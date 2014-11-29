@@ -1,8 +1,8 @@
 <?php
 $api_key = "***REMOVED***"; // Your Steam WebAPI-Key found at http://steamcommunity.com/dev/apikey
-$domainname = "108.61.169.195"; // The main URL of your website displayed in the login page
+$domainname = "lod.ash47.net"; // The main URL of your website displayed in the login page
 $button_style = "large"; // Style of the login button [small|large_no|large]
-$logout_page = "108.61.169.195"; // Page to redirect to after a successfull logout (from the root folder of your website)
+$logout_page = "redirect.php"; // Page to redirect to after a successfull logout (from the root folder of your website)
 
 // System stuff
 if (empty($api_key)) {die("<div style='display: block; width: 100%; background-color: red; text-align: center;'>SteamAuth:<br>Please supply a API-Key!</div>");}
