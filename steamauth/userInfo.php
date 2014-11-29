@@ -13,7 +13,6 @@
         $_SESSION['steam_avatarmedium'] = $content['response']['players'][0]['avatarmedium'];
         $_SESSION['steam_avatarfull'] = $content['response']['players'][0]['avatarfull'];
         $_SESSION['steam_personastate'] = $content['response']['players'][0]['personastate'];
-        $_SESSION['steam_realname'] = $content['response']['players'][0]['realname'];
         $_SESSION['steam_primaryclanid'] = $content['response']['players'][0]['primaryclanid'];
         $_SESSION['steam_timecreated'] = $content['response']['players'][0]['timecreated'];
         $_SESSION['steam_uptodate'] = true;
@@ -29,7 +28,6 @@
     $steamprofile['avatarmedium'] = $_SESSION['steam_avatarmedium'];
     $steamprofile['avatarfull'] = $_SESSION['steam_avatarfull'];
     $steamprofile['personastate'] = $_SESSION['steam_personastate'];
-    $steamprofile['realname'] = $_SESSION['steam_realname'];
     $steamprofile['primaryclanid'] = $_SESSION['steam_primaryclanid'];
     $steamprofile['timecreated'] = $_SESSION['steam_timecreated'];
 ?>
