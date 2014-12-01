@@ -52,6 +52,7 @@ var wsClient;
 
 	$(document).ready(function(){
 
+		var spinner = '<div class="spinner"><div class="spinner-container container1"><div class="circle1"></div><div class="circle2"></div><div class="circle3"></div><div class="circle4"></div></div><div class="spinner-container container2"><div class="circle1"></div><div class="circle2"></div><div class="circle3"></div><div class="circle4"></div></div><div class="spinner-container container3"><div class="circle1"></div><div class="circle2"></div><div class="circle3"></div><div class="circle4"></div></div></div>';
 
 		var Template = function(replaceObj, contentStr){
 			this.replaceObj = replaceObj;
@@ -126,9 +127,8 @@ var wsClient;
 				'<div class="row" style="height:20px;"></div>'+
 				'<div class="row" style="min-height:40px;">'+
 					'{{2}}'+
-				'</div>'
-			)
-			
+				'</div>')
+		
 		};
 
 		var dotaPath = "";
@@ -142,15 +142,32 @@ var wsClient;
 			'dotaPath':function(e, x){
 				dotaPath = x[1];
 			},
+			'startInstall':function(e, x){
+				$('#app').html('<div class="progress"><div id="progress" class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width:0%"></div></div>');
+			},
 			'addon':function(e, x){
 				// addon;lod;percent;100
 				if(x[3] !== "100"){
-					$('#app').html('<div class="progress"><div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="'+
-						x[3] + '" aria-valuemin="0" aria-valuemax="100" style="width: ' + x[3] + '%"></div></div>');
+					$('#progress').css('width', x[3] + '%').attr('aria-valuenow', x[3]);    
 				}
 			},
 			'installationComplete':function(e, x){
-				$('#app').html('Legends of Dota is up-to-date!');
+				wsClient.send("lobbies");
+			},
+			'lobbies':function(e, x){
+				// x[0] == "lobbies";
+				// x[1+3k] == lobbyData
+				var lobbies = "";
+				for(var i = 1; i < x.length; ++x){
+					var properties = x[i].split("|");
+					var players = x[i][1].split("-");
+					var addons = x[i][2].split("-");
+					lobbies += "Name: "+ properties[0] + "| Players: " + players[0]+ "/" + players[1] + "| Addons: ";
+					for(var j = 0; j < addons.length; ++j){
+						 lobbies += "[" + addons[j] + ",";
+					}
+					lobbies = lobbies.substring(0, lobbies.length - 1) + "]";
+				}
 			}
 		}
 		var timeoutPrevention;
