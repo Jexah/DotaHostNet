@@ -184,7 +184,7 @@ var wsClient;
 
 			wsClient.onerror = function(e, r, t){
 				if(wsClient.readyState === 3){
-					$('#app').html('Download the app <a href="DotaHostManager.exe" download>here</a>!');
+					$('#app').html('Download the app <a href="https://github.com/ash47/DotaHostAddons/releases/download/' + version + '/DotaHostManager.exe" download>here</a>!');
 				};
 				setTimeout(setupWebSocketConnection, 1000);
 			};
