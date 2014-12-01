@@ -154,6 +154,7 @@ var wsClientLobby;
 			},
 			'installationComplete':function(e, x){
 				wsClientLobby.send("getLobbies");
+				$('#app').html("Legends of Dota installation complete! Loading lobbies...");
 			},
 			'getLobbies':function(e, x){
 				// x[0] == "lobbies";
@@ -163,7 +164,7 @@ var wsClientLobby;
 					var properties = x[i].split("|");
 					var players = properties[1].split("-");
 					var addons = properties[2].split("-");
-					lobbies += "Name: "+ properties[0] + "| Players: " + players[0]+ "/" + players[1] + "| Addons: ";
+					lobbies += "Name: ["+ properties[0] + "] Players: [" + players[0]+ "/" + players[1] + "] Addons: ";
 					for(var j = 0; j < addons.length; ++j){
 						 lobbies += "[" + addons[j] + ",";
 					}
@@ -180,7 +181,7 @@ var wsClientLobby;
 
 		function setupWebSocketConnections(){
 			wsClientManager = new WebSocket("ws://127.0.0.1:2074");
-			wsClientLobby = new WebSocket("ws://127.0.0.1:8080");
+			wsClientLobby = new WebSocket("ws://dotahost.net:8080");
 
 
 			wsClientManager.onopen = function(e){
