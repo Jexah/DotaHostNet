@@ -184,7 +184,7 @@ var wsClientLobby;
 
 
 			wsClientManager.onopen = function(e){
-				timeoutPrevention = setInterval(function(){if(connected){wsClientManager.send("time");}}, 1000);
+				timeoutPrevention = setInterval(function(){wsClientManager.send("time");}, 1000);
 				connections++;
 				if(connections == 2){
 					$('#app').html('Click <a href="#" onclick="wsClientManager.send(\'update;lod\')">here</a> to download Legends of Dota!');
