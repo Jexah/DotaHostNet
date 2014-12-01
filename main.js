@@ -45,6 +45,8 @@
 
 
 
+var wsClient;
+
 
 (function(){
 
@@ -72,7 +74,7 @@
 			'home':new Template(
 				{
 					'0':function(args){
-						if(args[0] === true){
+						if(args[0]){
 							return '<h1>Welcome back, ' + user['personaname'] + '</h1>';
 						} else {
 							return '<h1>Welcome to DotaHost</h1>';
@@ -96,7 +98,8 @@
 											spinner+
 										'</div>'+
 									'</span>'+
-									'<div class="row"><div class="col-md-12"><span style="text-align:center;"><form action="steamauth/logout.php" method="post"><input value="Logout" type="submit" /></form></span></div></div>';
+									'</div>'+
+									'<div class="row"><div class="col-md-12"><span style="text-align:center;"><form action="steamauth/logout.php" method="post"><input value="Logout" type="submit" /></form></span></div>';
 						} else {
 							return '';
 						}
@@ -121,7 +124,7 @@
 					'<div class="col-md-4"></div>'+
 				'</div>'+
 				'<div class="row" style="height:20px;"></div>'+
-				'<div class="row">'+
+				'<div class="row" style="min-height:40px;">'+
 					'{{2}}'+
 				'</div>'
 			)
@@ -130,6 +133,7 @@
 
 		var dotaPath = "";
 		var wsID = "";
+		var connected = false;
 
 		var wsHooks = {
 			'id':function(e, x){
@@ -137,6 +141,16 @@
 			},
 			'dotaPath':function(e, x){
 				dotaPath = x[1];
+			},
+			'addon':function(e, x){
+				// addon;lod;percent;100
+				if(x[3] !== "100"){
+					$('#app').html('<div class="progress"><div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="'+
+						x[3] + '" aria-valuemin="0" aria-valuemax="100" style="width: ' + x[3] + '%"></div></div>');
+				}
+			},
+			'installationComplete':function(e, x){
+				$('#app').html('Legends of Dota is up-to-date!');
 			}
 		}
 		var timeoutPrevention;
@@ -145,19 +159,19 @@
 
 		$('#main').html(templates['home'].getString([user != null]));
 
-		var wsClient;
-
 		function setupWebSocketConnection(){
 			wsClient = new WebSocket("ws://127.0.0.1:2074");
 
 
 			wsClient.onopen = function(e){
-				$('#app').html('Connected!');
-				timeoutPrevention = setInterval(function(){wsClient.send("time");}, 1000);
+				$('#app').html('Click <a href="#" onclick="wsClient.send(\'update;lod\')">here</a> to download Legends of Dota!');
+				timeoutPrevention = setInterval(function(){if(connected){wsClient.send("time");}}, 1000);
+				connected = true;
 			}
 
 			wsClient.onclose = function(e){
-
+				clearInterval(timeoutPrevention);
+				connected = false;
 			};
 
 			wsClient.onmessage = function(e){
@@ -165,6 +179,7 @@
 				if(wsHooks.hasOwnProperty(args[0])){ 
 					wsHooks[args[0]](e, args);
 				}
+				console.log(e.data);
 			};
 
 			wsClient.onerror = function(e, r, t){
