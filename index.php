@@ -31,7 +31,7 @@
 	//$_SESSION['steam_uptodate'] = false;
 	steamLogin();
 ?>
-var managerVersion = <?php echo(file_get_contents('version.txt')); ?>;
+	var managerVersion = "<?php echo(file_get_contents('version.txt')); ?>";
 </script>
 
 <!DOCTYPE html>
