@@ -55,6 +55,8 @@ var wsClientLobby;
 
 		var spinner = '<div class="spinner"><div class="spinner-container container1"><div class="circle1"></div><div class="circle2"></div><div class="circle3"></div><div class="circle4"></div></div><div class="spinner-container container2"><div class="circle1"></div><div class="circle2"></div><div class="circle3"></div><div class="circle4"></div></div><div class="spinner-container container3"><div class="circle1"></div><div class="circle2"></div><div class="circle3"></div><div class="circle4"></div></div></div>';
 
+		var connections = 0;
+
 		var Template = function(replaceObj, contentStr){
 			this.replaceObj = replaceObj;
 			this.contentStr = contentStr;
@@ -134,7 +136,6 @@ var wsClientLobby;
 
 		var dotaPath = "";
 		var wsID = "";
-		var connected = false;
 
 		var wsHooks = {
 			'id':function(e, x){
@@ -157,8 +158,6 @@ var wsClientLobby;
 				$('#app').html("Legends of Dota installation complete! Loading lobbies...");
 			},
 			'getLobbies':function(e, x){
-				// x[0] == "lobbies";
-				// x[1+3k] == lobbyData
 				var lobbies = "";
 				for(var i = 1; i < x.length; ++x){
 					var properties = x[i].split("|");
@@ -185,14 +184,22 @@ var wsClientLobby;
 
 
 			wsClientManager.onopen = function(e){
-				$('#app').html('Click <a href="#" onclick="wsClientManager.send(\'update;lod\')">here</a> to download Legends of Dota!');
 				timeoutPrevention = setInterval(function(){if(connected){wsClientManager.send("time");}}, 1000);
-				connected = true;
-			}
+				connections++;
+				if(connections == 2){
+					$('#app').html('Click <a href="#" onclick="wsClientManager.send(\'update;lod\')">here</a> to download Legends of Dota!');
+				}
+			};
+
+			wsClientLobby.onopen = function(e){
+				connections++;
+				if(connections == 2){
+					$('#app').html('Click <a href="#" onclick="wsClientManager.send(\'update;lod\')">here</a> to download Legends of Dota!');
+				}
+			};
 
 			wsClientManager.onclose = function(e){
 				clearInterval(timeoutPrevention);
-				connected = false;
 			};
 
 			var onMessage = function(e){
