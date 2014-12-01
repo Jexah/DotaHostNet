@@ -152,7 +152,7 @@ var wsClient;
 				}
 			},
 			'installationComplete':function(e, x){
-				wsClient.send("lobbies");
+				wsClient.send("getLobbies");
 			},
 			'lobbies':function(e, x){
 				// x[0] == "lobbies";
@@ -168,6 +168,7 @@ var wsClient;
 					}
 					lobbies = lobbies.substring(0, lobbies.length - 1) + "]";
 				}
+
 			}
 		}
 		var timeoutPrevention;
@@ -193,10 +194,10 @@ var wsClient;
 
 			wsClient.onmessage = function(e){
 				var args = e.data.split(';');
+				console.log(e.data);
 				if(wsHooks.hasOwnProperty(args[0])){ 
 					wsHooks[args[0]](e, args);
 				}
-				console.log(e.data);
 			};
 
 			wsClient.onerror = function(e, r, t){
