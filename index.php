@@ -31,6 +31,7 @@
 	//$_SESSION['steam_uptodate'] = false;
 	steamLogin();
 ?>
+var managerVersion = <?php echo(get_file_contents('http://dotahost.net/version.txt')); ?>;
 </script>
 
 <!DOCTYPE html>
