@@ -175,7 +175,9 @@
 			};
 		};
 
-		setTimeout(setupWebSocketConnection, 1000);
+		if(user != null){
+			setTimeout(setupWebSocketConnection, 1000);
+		}
 
 	});
 
