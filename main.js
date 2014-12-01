@@ -154,7 +154,7 @@ var wsClient;
 			'installationComplete':function(e, x){
 				wsClient.send("getLobbies");
 			},
-			'lobbies':function(e, x){
+			'getLobbies':function(e, x){
 				// x[0] == "lobbies";
 				// x[1+3k] == lobbyData
 				var lobbies = "";
@@ -168,7 +168,7 @@ var wsClient;
 					}
 					lobbies = lobbies.substring(0, lobbies.length - 1) + "]";
 				}
-
+				$('#app').html(lobbies);
 			}
 		}
 		var timeoutPrevention;
@@ -193,8 +193,8 @@ var wsClient;
 			};
 
 			wsClient.onmessage = function(e){
-				var args = e.data.split(';');
 				console.log(e.data);
+				var args = e.data.split(';');
 				if(wsHooks.hasOwnProperty(args[0])){ 
 					wsHooks[args[0]](e, args);
 				}
