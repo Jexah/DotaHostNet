@@ -199,7 +199,12 @@ var wsClientLobby;
 			};
 
 			wsClientManager.onclose = function(e){
+				connections--;
 				clearInterval(timeoutPrevention);
+			};
+
+			wsClientLobby.onclose = function(e){
+				connections--;
 			};
 
 			var onMessage = function(e){
