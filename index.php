@@ -1,14 +1,38 @@
+<script>
+	var spinner = '<div class="spinner"><div class="spinner-container container1"><div class="circle1"></div><div class="circle2"></div><div class="circle3"></div><div class="circle4"></div></div><div class="spinner-container container2"><div class="circle1"></div><div class="circle2"></div><div class="circle3"></div><div class="circle4"></div></div><div class="spinner-container container3"><div class="circle1"></div><div class="circle2"></div><div class="circle3"></div><div class="circle4"></div></div></div>';
 <?php
 	require ('steamauth/steamauth.php');  
 
 	$loggedIn = isset($_SESSION['steamid']);
 	if($loggedIn){
 		include ('steamauth/userInfo.php');
+?>		
+	var user = {};
+	user['steamid'] = <?php echo($steamprofile['steamid']); ?>;
+	user['communityvisibilitystate'] = <?php echo($steamprofile['communityvisibilitystate']); ?>;
+	user['profilestate'] = <?php echo($steamprofile['profilestate']); ?>;
+	user['personaname'] = <?php echo('"' . $steamprofile['personaname'] . '"'); ?>;
+	user['lastlogoff'] = <?php echo($steamprofile['lastlogoff']); ?>;
+	user['profileurl'] = <?php echo('"' . $steamprofile['profileurl'] . '"'); ?>;
+	user['avatar'] = <?php echo('"' . $steamprofile['avatar'] . '"'); ?>;
+	user['avatarmedium'] = <?php echo('"' . $steamprofile['avatarmedium'] . '"'); ?>;
+	user['avatarfull'] = <?php echo('"' . $steamprofile['avatarfull'] . '"'); ?>;
+	user['personastate'] = <?php echo($steamprofile['personastate']); ?>;
+	user['primaryclanid'] = <?php echo($steamprofile['primaryclanid']); ?>;
+	user['timecreated'] = <?php echo($steamprofile['timecreated']); ?>;
+<?php
+	} else {
+?>
+		var user = null;
+<?php
 	}
 
 	# You would uncomment the line beneath to make it refresh the data every time the page is loaded
 	//$_SESSION['steam_uptodate'] = false;
+	steamLogin();
 ?>
+</script>
+
 <!DOCTYPE html>
 <html lang="en">
 	<head>
@@ -23,65 +47,15 @@
 		<title>DotaHost.Net</title>
 	</head>
 	<body>
-		<div class="container">
-
-			<div class="row" style="height:200px;">
-			</div>
-			<div class="row" style="height:100px;">
-				<div class="col-md-3"></div>
-				<div class="col-md-6">
-					<span style="text-align:center;">
-						<?php
-							if($loggedIn) {
-						?>
-								<h1>Welcome back, <?php echo($steamprofile['personaname']); ?></h1>
-						<?php
-							}else{
-						?>
-								<h1>Welcome to DotaHost</h1>
-						<?php
-							}
-						?>
-					</span>
-				</div>
-				<div class="col-md-3"></div>
-			</div>
-			<div class="row">
-				<div class="col-md-4">.</div>
-				<div class="col-md-4">
-						<?php
-							if(!$loggedIn){
-								echo('<span style="text-align:center;">');
-								steamlogin(); //login button
-								echo('</span>');
-							}else{
-								echo('<img style="display:block;margin-left:auto;margin-right:auto;" src="'.$_SESSION['steam_avatarfull'].'" title="" alt="" />');
-							}
-						?>
-				</div>
-				<div class="col-md-4"></div>
-			</div>
-			<div class="row" style="height:20px;"></div>
-			<div class="row">
-				<?php
-					if($loggedIn){
-				?>
-					<div class="row">
-						<div class="col-md-12">
-							<span style="text-align:center;"><?php logoutbutton(); ?></span>
-						</div>
-					</div>
-				<?php 
-					}
-				?>
-			</div>
+		<div id="main" class="container">
+			
 		</div>
 
-		<?php
-			if($loggedIn){
-				echo('<script>history.pushState({}, "", "/");</script>');
+		<script>
+			if(user != null){
+				history.pushState({}, "", "/");
 			}
-		?>
+		</script>
 		<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
 		<!-- Latest compiled and minified JavaScript -->
