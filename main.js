@@ -45,7 +45,8 @@
 
 
 
-var wsClient;
+var wsClientManager;
+var wsClientLobby;
 
 
 (function(){
@@ -152,8 +153,7 @@ var wsClient;
 				}
 			},
 			'installationComplete':function(e, x){
-				console.log('yolo');
-				wsClient.send("getLobbies");
+				wsClientLobby.send("getLobbies");
 			},
 			'getLobbies':function(e, x){
 				// x[0] == "lobbies";
@@ -161,8 +161,8 @@ var wsClient;
 				var lobbies = "";
 				for(var i = 1; i < x.length; ++x){
 					var properties = x[i].split("|");
-					var players = x[i][1].split("-");
-					var addons = x[i][2].split("-");
+					var players = properties[1].split("-");
+					var addons = properties[2].split("-");
 					lobbies += "Name: "+ properties[0] + "| Players: " + players[0]+ "/" + players[1] + "| Addons: ";
 					for(var j = 0; j < addons.length; ++j){
 						 lobbies += "[" + addons[j] + ",";
@@ -178,40 +178,42 @@ var wsClient;
 
 		$('#main').html(templates['home'].getString([user != null]));
 
-		function setupWebSocketConnection(){
-			wsClient = new WebSocket("ws://127.0.0.1:2074");
+		function setupWebSocketConnections(){
+			wsClientManager = new WebSocket("ws://127.0.0.1:2074");
+			wsClientLobby = new WebSocket("ws://127.0.0.1:8080");
 
 
-			wsClient.onopen = function(e){
-				$('#app').html('Click <a href="#" onclick="wsClient.send(\'update;lod\')">here</a> to download Legends of Dota!');
-				timeoutPrevention = setInterval(function(){if(connected){wsClient.send("time");}}, 1000);
+			wsClientManager.onopen = function(e){
+				$('#app').html('Click <a href="#" onclick="wsClientManager.send(\'update;lod\')">here</a> to download Legends of Dota!');
+				timeoutPrevention = setInterval(function(){if(connected){wsClientManager.send("time");}}, 1000);
 				connected = true;
 			}
 
-			wsClient.onclose = function(e){
+			wsClientManager.onclose = function(e){
 				clearInterval(timeoutPrevention);
 				connected = false;
 			};
 
-			wsClient.onmessage = function(e){
+			var onMessage = function(e){
 				console.log(e.data);
 				var args = e.data.split(';');
 				if(wsHooks.hasOwnProperty(args[0])){ 
 					wsHooks[args[0]](e, args);
 				}
 			};
+			wsClientManager.onmessage = onMessage;
+			wsClientLobby.onmessage = onMessage;
 
-			wsClient.onerror = function(e, r, t){
-				if(wsClient.readyState === 3){
-					// $('#app').html('Download the app <a href="https://github.com/ash47/DotaHostAddons/releases/download/' + managerVersion + '/DotaHostManager.exe" download>here</a>!');
-					$('#app').html('Download the app <a href="DotaHostManager.exe" download>here</a>!');
+			wsClientManager.onerror = function(e, r, t){
+				if(wsClientManager.readyState === 3){
+					$('#app').html('Download the app <a href="https://github.com/ash47/DotaHostAddons/releases/download/' + managerVersion + '/DotaHostManager.exe" download>here</a>!');
 				};
-				setTimeout(setupWebSocketConnection, 1000);
+				setTimeout(setupWebSocketConnections, 1000);
 			};
 		};
 
 		if(user != null){
-			setTimeout(setupWebSocketConnection, 1000);
+			setTimeout(setupWebSocketConnections, 1000);
 		}
 
 	});
