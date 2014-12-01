@@ -152,6 +152,7 @@ var wsClient;
 				}
 			},
 			'installationComplete':function(e, x){
+				console.log('yolo');
 				wsClient.send("getLobbies");
 			},
 			'getLobbies':function(e, x){
