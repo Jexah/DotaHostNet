@@ -1,23 +1,26 @@
 <script>
 <?php
+	include_once('sql.php');
 	require ('steamauth/steamauth.php');
 	$loggedIn = isset($_SESSION['steamid']);
 	if($loggedIn){
 		include ('steamauth/userInfo.php');
-?>		
-	var user = {};
-	user['steamid'] = <?php echo($steamprofile['steamid']); ?>;
-	user['communityvisibilitystate'] = <?php echo($steamprofile['communityvisibilitystate']); ?>;
-	user['profilestate'] = <?php echo($steamprofile['profilestate']); ?>;
-	user['personaname'] = <?php echo('"' . $steamprofile['personaname'] . '"'); ?>;
-	user['lastlogoff'] = <?php echo($steamprofile['lastlogoff']); ?>;
-	user['profileurl'] = <?php echo('"' . $steamprofile['profileurl'] . '"'); ?>;
-	user['avatar'] = <?php echo('"' . $steamprofile['avatar'] . '"'); ?>;
-	user['avatarmedium'] = <?php echo('"' . $steamprofile['avatarmedium'] . '"'); ?>;
-	user['avatarfull'] = <?php echo('"' . $steamprofile['avatarfull'] . '"'); ?>;
-	user['personastate'] = <?php echo($steamprofile['personastate']); ?>;
-	user['primaryclanid'] = <?php echo($steamprofile['primaryclanid']); ?>;
-	user['timecreated'] = <?php echo($steamprofile['timecreated']); ?>;
+?>
+	var user = {
+		steamid: <?php echo($steamprofile['steamid32']); ?>,
+		communityvisibilitystate: <?php echo($steamprofile['communityvisibilitystate']); ?>,
+		profilestate: <?php echo($steamprofile['profilestate']); ?>,
+		personaname: <?php echo('"' . addslashes($steamprofile['personaname']) . '"'); ?>,
+		lastlogoff: <?php echo($steamprofile['lastlogoff']); ?>,
+		profileurl: <?php echo('"' . $steamprofile['profileurl'] . '"'); ?>,
+		avatar: <?php echo('"' . $steamprofile['avatar'] . '"'); ?>,
+		avatarmedium: <?php echo('"' . $steamprofile['avatarmedium'] . '"'); ?>,
+		avatarfull: <?php echo('"' . $steamprofile['avatarfull'] . '"'); ?>,
+		personastate: <?php echo($steamprofile['personastate']); ?>,
+		primaryclanid: <?php echo($steamprofile['primaryclanid']); ?>,
+		timecreated: <?php echo($steamprofile['timecreated']); ?>,
+		token: <?php echo('"' . $steamprofile['token'] . '"'); ?>,
+	};
 <?php
 	} else {
 ?>
@@ -47,7 +50,7 @@
 	</head>
 	<body>
 		<div id="main" class="container">
-			
+
 		</div>
 
 		<script>
