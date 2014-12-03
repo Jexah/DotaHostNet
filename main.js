@@ -178,8 +178,6 @@ var wsClientLobby;
 
 		$('#main').html(templates['home'].getString([user != null]));
 
-		console.log('wtf');
-
 		function setupWebSocketConnections(){
 			wsClientManager = new WebSocket("ws://127.0.0.1:2074");
 			wsClientLobby = new WebSocket("ws://dotahost.net:8080");
