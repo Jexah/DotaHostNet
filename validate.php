@@ -22,7 +22,7 @@ $result = $mysqli->query($query);
 $row = $result->fetch_row();
 
 // Check if we found any
-if($row) {
+if($row && $_SERVER['REMOTE_ADDR'] == "127.0.0.1") {
         ?>
 
 {
