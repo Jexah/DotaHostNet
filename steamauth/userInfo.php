@@ -1,7 +1,10 @@
 <?php
+    // Do token generation
+    require_once('token.php');
+
 	include("settings.php");
     if (empty($_SESSION['steam_uptodate']) or $_SESSION['steam_uptodate'] == false or empty($_SESSION['steam_personaname'])) {
-        $url = file_get_contents("http://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key=".$api_key."&steamids=".$_SESSION['steamid']); 
+        $url = file_get_contents("http://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key=".$api_key."&steamids=".$_SESSION['steamid']);
         $content = json_decode($url, true);
         $_SESSION['steam_steamid'] = $content['response']['players'][0]['steamid'];
         $_SESSION['steam_communityvisibilitystate'] = $content['response']['players'][0]['communityvisibilitystate'];
@@ -16,9 +19,22 @@
         $_SESSION['steam_primaryclanid'] = $content['response']['players'][0]['primaryclanid'];
         $_SESSION['steam_timecreated'] = $content['response']['players'][0]['timecreated'];
         $_SESSION['steam_uptodate'] = true;
+
+        // Generate a new token
+        generateToken();
     }
-    
+
+    // Check if we have a token
+    if(empty($_SESSION['steam_token'])) {
+        // Generate the token
+        generateToken();
+    }
+
+    // Ensure they have a key to give the webserver
+
+
     $steamprofile['steamid'] = $_SESSION['steam_steamid'];
+    $steamprofile['steamid32'] = convert_id($_SESSION['steam_steamid']);
     $steamprofile['communityvisibilitystate'] = $_SESSION['steam_communityvisibilitystate'];
     $steamprofile['profilestate'] = $_SESSION['steam_profilestate'];
     $steamprofile['personaname'] = $_SESSION['steam_personaname'];
@@ -30,5 +46,6 @@
     $steamprofile['personastate'] = $_SESSION['steam_personastate'];
     $steamprofile['primaryclanid'] = $_SESSION['steam_primaryclanid'];
     $steamprofile['timecreated'] = $_SESSION['steam_timecreated'];
+    $steamprofile['token'] = $_SESSION['steam_token'];
 ?>
-    
+
