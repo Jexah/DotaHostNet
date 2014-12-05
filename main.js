@@ -332,7 +332,12 @@ var wsClientLobby;
 				'<p>Click {{0}} to create a lobby!</p>',
 					function(args) {
 						return $('<a>').attr('href', '#').text('here').click(function() {
-							selectPage('inLobby');
+							//selectPage('inLobby');
+
+							var msg = 'createLobby;' + user.token + ';' + user.steamid + ';{}';
+
+							console.log('Sending message: '+msg);
+							wsClientLobby.send(msg);
 						});
 					}
 			]),
@@ -389,6 +394,10 @@ var wsClientLobby;
 					lobbies = lobbies.substring(0, lobbies.length - 1) + "]";
 				}
 				$('#app').html(lobbies);
+			},
+			'joinLobby':function(){
+				console.log('Got a join lobby');
+				console.log(arguments);
 			}
 		}
 		var timeoutPrevention;
@@ -402,7 +411,7 @@ var wsClientLobby;
 
 		function setupWebSocketConnections(){
 			wsClientManager = new WebSocket("ws://127.0.0.1:2074");
-			wsClientLobby = new WebSocket("ws://dotahost.net:8080");
+			wsClientLobby = new WebSocket("ws://dotahost.net:2075");
 
 
 			wsClientManager.onopen = function(e){
