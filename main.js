@@ -74,17 +74,8 @@ var wsClientLobby;
 			// The overall string
 			this.compiledString = '';
 			this.functionList = [];
-			this.reusableFunctions = {};
+			this.reusableFunctions = funcs || {};
 			this.conditonals = [];
-
-			// Copy in resuable functions
-			if(funcs != null) {
-				for(var key in funcs) {
-					if(typeof(funcs[key]) == 'function') {
-						this.reusableFunctions[key] = funcs[key];
-					}
-				}
-			}
 
 			// Check if we have a conditon here
 			var startAt = 0;
