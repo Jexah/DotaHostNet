@@ -292,6 +292,11 @@ var wsClientLobby;
 						if(isVerified) {
 							return 'style="display:none;"';
 						}
+					},
+
+					// Returns the user's avatar
+					'avatar':function(args) {
+						return user['avatarfull'];
 					}
 				},
 				'<div class="row" style="height:200px;">',
@@ -316,11 +321,9 @@ var wsClientLobby;
 								'<div id="createLobbyDiv" [[isVerified]]>',
 									'<p>Click {{0}} to create a new lobby.</p>',
 									function(args) {
-										if(args[0]) {
-											return $('<a>').attr('href', '#').text('here').click(function() {
-												selectPage('createLobby');
-											});
-										}
+										return $('<a>').attr('href', '#').text('here').click(function() {
+											selectPage('createLobby');
+										});
 									},
 								'</div>',
 							],
@@ -338,9 +341,7 @@ var wsClientLobby;
 					'<div class="col-md-4">',
 						// User is logged in
 						[function(args){return args[0];},
-							'{{0}}', function(args) {
-								return '<img style="display:block;margin-left:auto;margin-right:auto;" src="' + user['avatarfull'] + '" />';
-							}
+							'<img style="display:block;margin-left:auto;margin-right:auto;" src="[[avatar]]" />'
 						],
 
 						// User is not logged in
