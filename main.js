@@ -54,14 +54,16 @@ var wsClientLobby;
 		// Will contain the function to select pages
 		var selectPage;
 
+		// Whether we have been verified or not
+		isVerified =  false;
+
 		var spinner = '<div class="spinner"><div class="spinner-container container1"><div class="circle1"></div><div class="circle2"></div><div class="circle3"></div><div class="circle4"></div></div><div class="spinner-container container2"><div class="circle1"></div><div class="circle2"></div><div class="circle3"></div><div class="circle4"></div></div><div class="spinner-container container3"><div class="circle1"></div><div class="circle2"></div><div class="circle3"></div><div class="circle4"></div></div></div>';
 
 		var connections = 0;
 
-		// This function takes unlimited arguments
-		// Arguments can be:
-		// 	string: This must be a valid html string
-		var Template = function(args){
+		// args is an array of arguments
+		// funcs is an an object containing reusable functions
+		var Template = function(args, funcs){
 			//this.replaceObj = replaceObj;
 			//this.contentStr = contentStr;
 			//this.objs = arguments;
@@ -74,6 +76,15 @@ var wsClientLobby;
 			this.functionList = [];
 			this.reusableFunctions = {};
 			this.conditonals = [];
+
+			// Copy in resuable functions
+			if(funcs != null) {
+				for(var key in funcs) {
+					if(typeof(funcs[key]) == 'function') {
+						this.reusableFunctions[key] = funcs[key];
+					}
+				}
+			}
 
 			// Check if we have a conditon here
 			var startAt = 0;
@@ -122,7 +133,7 @@ var wsClientLobby;
 						this.compiledString += '<span class="' + replacePrefix + '" condition="' + this.conditonals.length + '"></span>';
 
 						// We have a conditional here, store it
-						this.conditonals.push(new Template(arg));
+						this.conditonals.push(new Template(arg, this.reusableFunctions));
 					} else {
 						// Copy the functions in
 						for(var key in arg) {
@@ -133,8 +144,6 @@ var wsClientLobby;
 					}
 				}
 			}
-
-			console.log(this.compiledString);
 
 			// Applies this template to the given div (pass a select, eg, #main), if not specified, it will default to #main
 			this.apply = function(args, div) {
@@ -157,9 +166,28 @@ var wsClientLobby;
 				// Check if we should run or not
 				if(this.conditon && !this.conditon(args)) return false;
 
+				var copy = this.compiledString;
+
+				// Find reusable function references
+				matches = copy.match(/\[\[([a-zA-Z][a-zA-Z\d]*)\]\]/g);
+
+				// If we have matches, patch the string
+				if(matches != null) {
+					for(var j=0; j<matches.length; ++j) {
+						var matchText = matches[j].substring(2, matches[j].length-2);
+
+						// Paste the text in
+						if(this.reusableFunctions[matchText]) {
+							copy = copy.replace(matches[j], this.reusableFunctions[matchText](args) || '');
+						} else {
+							copy = copy.replace(matches[j], '');
+						}
+					}
+				}
+
 				// Build the chunk of it
 				var mainChunk = $('<span>');//.html().contents();
-				mainChunk.html(this.compiledString);
+				mainChunk.html(copy);
 
 				// Ensure it worked
 				if(!mainChunk) {
@@ -191,8 +219,6 @@ var wsClientLobby;
 						if(conditonals[condition]) {
 							// Grab what we replace with
 							replaceWith = conditonals[condition].apply(args, false);
-
-							console.log(replaceWith);
 
 							// Check if we have anything to replace in
 							if(replaceWith == false) {
@@ -253,6 +279,21 @@ var wsClientLobby;
 		var templates = {
 			// Home page [isLoggedIn:bool]
 			'home':new Template([
+				{
+					// This will make a given element invisible if the user isn't verified
+					'isVerified': function(args) {
+						if(!isVerified) {
+							return 'style="display:none;"';
+						}
+					},
+
+					// This will make the given element invisible if the user is verified
+					'notVerified': function(args) {
+						if(isVerified) {
+							return 'style="display:none;"';
+						}
+					}
+				},
 				'<div class="row" style="height:200px;">',
 				'</div>',
 				'<div class="row" style="height:100px;">',
@@ -264,14 +305,24 @@ var wsClientLobby;
 								'{{0}}', function(args) {
 									return '<h1>Welcome back, ' + user['personaname'] + '</h1>';
 								},
-								'<p>Click {{0}} to create a new lobby.</p>',
-								function(args) {
-									if(args[0]) {
-										return $('<a>').attr('href', '#').text('here').click(function() {
-											selectPage('createLobby');
-										});
-									}
-								}
+
+								// Verifiying Div
+								'<div id="verifying" [[notVerified]]>',
+									'Please wait while we verify you...',
+									spinner,
+								'</div>',
+
+								// Create lobby button
+								'<div id="createLobbyDiv" [[isVerified]]>',
+									'<p>Click {{0}} to create a new lobby.</p>',
+									function(args) {
+										if(args[0]) {
+											return $('<a>').attr('href', '#').text('here').click(function() {
+												selectPage('createLobby');
+											});
+										}
+									},
+								'</div>',
 							],
 
 							// User is not logged in
@@ -329,12 +380,17 @@ var wsClientLobby;
 				'<h1>Create a lobby</h1>'+
 				'<h2>Settings</h2>'+
 				'<p>No settings for shoe!</p>',
+				'Lobby name: <input id="inputLobbyName" text="text">',
 				'<p>Click {{0}} to create a lobby!</p>',
 					function(args) {
 						return $('<a>').attr('href', '#').text('here').click(function() {
-							//selectPage('inLobby');
+							var args = JSON.stringify({
+								'0': $("#inputLobbyName").val() || ''
+							});
 
-							var msg = 'createLobby;' + user.token + ';' + user.steamid + ';{}';
+							args = '{"2": {"0": {"0": "lod", "1": {"pickingMode": "All Pick"}}}, "4": "3", "3": "5", "0": "trolol", "5": "19", "1": {"0": {"1": "5", "0": "teamMeowingtons", "2": {"0": {"2": "avatar URL here", "1": "some personan name", "3": "http://steamcommunity.com/jexah", "0": "28123256"}}}, "1": {"1": "5", "2": {"0": {"2": "avatar URL here", "1": "some personan name", "3": "http://steamcommunity.com/jexah", "0": "45686503"}, "1": {"2": "avatar URL here", "1": "some personan name", "3": "http://steamcommunity.com/jexah", "0": "28090256"}}, "0": "teamMeowingtons"}}}';
+
+							var msg = 'createLobby;' + user.token + ';' + user.steamid + ';' + args;
 
 							console.log('Sending message: '+msg);
 							wsClientLobby.send(msg);
@@ -398,6 +454,17 @@ var wsClientLobby;
 			'joinLobby':function(){
 				console.log('Got a join lobby');
 				console.log(arguments);
+			},
+			'validate':function(e, x){
+				if(x[1] == 'success') {
+					// Verified successfully!
+
+					// Show the div
+					$('#createLobbyDiv').show();
+					$('#verifying').hide();
+				} else {
+					// Failed to verify
+				}
 			}
 		}
 		var timeoutPrevention;
@@ -409,20 +476,11 @@ var wsClientLobby;
 		//selectPage('createLobby');
 		selectPage('home', [user != null]);
 
-		function setupWebSocketConnections(){
+		function setupClientSocket(){
 			wsClientManager = new WebSocket("ws://127.0.0.1:2074");
-			wsClientLobby = new WebSocket("ws://dotahost.net:2075");
-
 
 			wsClientManager.onopen = function(e){
 				timeoutPrevention = setInterval(function(){wsClientManager.send("time");}, 1000);
-				connections++;
-				if(connections == 2){
-					$('#app').html('Click <a href="#" onclick="wsClientManager.send(\'update;lod\')">here</a> to download Legends of Dota!');
-				}
-			};
-
-			wsClientLobby.onopen = function(e){
 				connections++;
 				if(connections == 2){
 					$('#app').html('Click <a href="#" onclick="wsClientManager.send(\'update;lod\')">here</a> to download Legends of Dota!');
@@ -433,9 +491,46 @@ var wsClientLobby;
 				connections--;
 				clearInterval(timeoutPrevention);
 			};
+			var onMessage = function(e){
+				console.log(e.data);
+				var args = e.data.split(';');
+				if(wsHooks.hasOwnProperty(args[0])){
+					wsHooks[args[0]](e, args);
+				}
+			};
+			wsClientManager.onmessage = onMessage;
+
+			wsClientManager.onerror = function(e, r, t){
+				if(wsClientManager.readyState === 3){
+					$('#app').html('Download the app <a href="https://github.com/ash47/DotaHostAddons/releases/download/' + managerVersion + '/DotaHostManager.exe" download>here</a>!');
+				};
+				setTimeout(setupClientSocket, 1000);
+			};
+		};
+
+		function setupWebLobbySocket(){
+			wsClientLobby = new WebSocket("ws://dotahost.net:2075");
+
+			wsClientLobby.onopen = function(e){
+				connections++;
+				if(connections == 2){
+					$('#app').html('Click <a href="#" onclick="wsClientManager.send(\'update;lod\')">here</a> to download Legends of Dota!');
+				}
+
+				// Ask for validation straight away
+				wsClientLobby.send('validate;' + user.token + ';' + user.steamid);
+
+				// We should now be verified
+				isVerified = true;
+			};
 
 			wsClientLobby.onclose = function(e){
 				connections--;
+			};
+
+			wsClientLobby.onerror = function(e, r, t){
+				// Retry the connection
+				setTimeout(setupWebLobbySocket, 1000);
 			};
 
 			var onMessage = function(e){
@@ -445,19 +540,12 @@ var wsClientLobby;
 					wsHooks[args[0]](e, args);
 				}
 			};
-			wsClientManager.onmessage = onMessage;
 			wsClientLobby.onmessage = onMessage;
-
-			wsClientManager.onerror = function(e, r, t){
-				if(wsClientManager.readyState === 3){
-					$('#app').html('Download the app <a href="https://github.com/ash47/DotaHostAddons/releases/download/' + managerVersion + '/DotaHostManager.exe" download>here</a>!');
-				};
-				setTimeout(setupWebSocketConnections, 1000);
-			};
 		};
 
 		if(user != null){
-			setTimeout(setupWebSocketConnections, 1000);
+			setTimeout(setupClientSocket, 1000);
+			setTimeout(setupWebLobbySocket, 1000);
 		}
 
 	});
