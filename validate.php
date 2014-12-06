@@ -1,11 +1,11 @@
 <?PHP
     $failString = 'get the fuck out of here';
-    if($_SERVER['REMOTE_ADDR'] != "127.0.0.1")
-    {
-        echo($failString);
-    }
-    else
-    {
+    //if($_SERVER['REMOTE_ADDR'] != "127.0.0.1")
+    //{
+    //    echo($failString);
+    //}
+    //else
+    //{
         include_once('sql.php');
         $mysqli = mysqlConnect();
 
@@ -28,19 +28,10 @@
 
         // Check if we found any
         if($row) {
-                ?>
-
-        {
-            steamID: <?PHP echo $steamID; ?>,
-            avatar: "<?PHP echo $row[0]; ?>",
-            personaname: "<?PHP echo addslashes($row[1]); ?>",
-            profileurl: "<?PHP echo $row[2]; ?>"
-        }
-
-            <?PHP
+?>{"0":"<?PHP echo $steamID; ?>","1":"<?PHP echo addslashes($row[1]); ?>","2":"<?PHP echo $row[0]; ?>","3":"<?PHP echo $row[2]; ?>"}<?PHP
         } else {
             echo $failString;
             return;
         }
-    }
+    //}
 ?>
