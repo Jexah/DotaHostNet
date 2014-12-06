@@ -160,7 +160,7 @@ var wsClientLobby;
 				var copy = this.compiledString;
 
 				// Find reusable function references
-				matches = copy.match(/\[\[([a-zA-Z][a-zA-Z\d]*)\]\]/g);
+				var matches = copy.match(/\[\[([a-zA-Z][a-zA-Z\d]*)\]\]/g);
 
 				// If we have matches, patch the string
 				if(matches != null) {
@@ -170,6 +170,24 @@ var wsClientLobby;
 						// Paste the text in
 						if(this.reusableFunctions[matchText]) {
 							copy = copy.replace(matches[j], this.reusableFunctions[matchText](args) || '');
+						} else {
+							copy = copy.replace(matches[j], '');
+						}
+					}
+				}
+
+
+
+				// Inplace functions
+				matches = copy.match(/\[\[(\d+)\]\]/g);
+
+				// If we have matches, patch the string
+				if(matches != null) {
+					for(var j=0; j<matches.length; ++j) {
+						var matchText = parseInt(matches[j].substring(2, matches[j].length-2));
+
+						if(this.functionList[matchText]) {
+							copy = copy.replace(matches[j], this.functionList[matchText](args) || '');
 						} else {
 							copy = copy.replace(matches[j], '');
 						}
@@ -189,7 +207,7 @@ var wsClientLobby;
 				// Find all the things that need replacing
 				var toReplace = mainChunk.find('.' + replacePrefix);
 
-				var i=0;
+				var inPlaceFunctionNumber=0;
 				var functionList = this.functionList;
 				var reusableFunctions = this.reusableFunctions;
 				var conditonals = this.conditonals;
@@ -233,9 +251,9 @@ var wsClientLobby;
 								}
 							}
 						}
-					} else if(functionList[i]) {
+					} else if(functionList[inPlaceFunctionNumber]) {
 						// Grab what we are replacing with
-						replaceWith = functionList[i++](args);
+						replaceWith = functionList[inPlaceFunctionNumber++](args);
 
 						// If it's a string, convert to something usable
 						if(typeof(replaceWith) == 'string') {
