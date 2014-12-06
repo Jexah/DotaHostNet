@@ -51,6 +51,39 @@ var wsClientLobby;
 (function(){
 
 	$(document).ready(function(){
+
+		var LOBBY_NAME = "0";
+		var LOBBY_TEAMS = "1";
+		var LOBBY_ADDONS = "2";
+		var LOBBY_MAX_PLAYERS = "3";
+		var LOBBY_CURRENT_PLAYERS = "4";
+		var LOBBY_REGION = "5";
+
+		var ADDON_ID = "0";
+		var ADDON_OPTIONS = "1";
+
+		var TEAM_NAME = "0";
+		var TEAM_MAX_PLAYERS = "1";
+		var TEAM_PLAYERS = "2";
+
+		var PLAYER_STEAMID = "0";
+		var PLAYER_PERSONANAME = "1";
+		var PLAYER_AVATAR = "2";
+		var PLAYER_PROFILEURL = "3";
+
+		var ID_TO_REGION = {
+			"19":"Australia"
+		};
+
+		var REGION_TO_ID = {
+			"Australia":"19"
+		};
+
+
+		
+
+
+
 		// Will contain the function to select pages
 		var selectPage;
 
@@ -394,11 +427,36 @@ var wsClientLobby;
 				'<p>Click {{0}} to create a lobby!</p>',
 					function(args) {
 						return $('<a>').attr('href', '#').text('here').click(function() {
-							var args = JSON.stringify({
-								'0': $("#inputLobbyName").val() || ''
-							});
 
-							args = '{"2": {"0": {"0": "lod", "1": {"pickingMode": "All Pick"}}}, "4": "3", "3": "5", "0": "trolol", "5": "19", "1": {"0": {"1": "5", "0": "teamMeowingtons", "2": {"0": {"2": "avatar URL here", "1": "some personan name", "3": "http://steamcommunity.com/jexah", "0": "28123256"}}}, "1": {"1": "5", "2": {"0": {"2": "avatar URL here", "1": "some personan name", "3": "http://steamcommunity.com/jexah", "0": "45686503"}, "1": {"2": "avatar URL here", "1": "some personan name", "3": "http://steamcommunity.com/jexah", "0": "28090256"}}, "0": "teamMeowingtons"}}}';
+							var lobby = {};
+							var addon = {};
+							addon[ADDON_ID] = "lod";
+							addon[ADDON_OPTIONS] = {"pickingStyle":"All Pick"};
+
+							var addons = {"0":addon};
+
+							var team1 = {};
+							team1[TEAM_NAME] = "Radiant";
+							team1[TEAM_MAX_PLAYERS] = "5";
+							team1[TEAM_PLAYERS] = {};
+
+							var team2 = {};
+							team2[TEAM_NAME] = "Dire";
+							team2[TEAM_MAX_PLAYERS] = "5";
+							team2[TEAM_PLAYERS] = {};
+
+
+							var teams = {"0":team1,"1":team2};
+
+							lobby[LOBBY_NAME] = $("#inputLobbyName").val() || user['personaname'] + "'s Lobby";
+							lobby[LOBBY_CURRENT_PLAYERS] = "0";
+							lobby[LOBBY_MAX_PLAYERS] = "2";
+							lobby[LOBBY_REGION] = REGION_TO_ID["Australia"];
+							lobby[LOBBY_TEAMS] = teams;
+							lobby[LOBBY_ADDONS] = addons;
+
+							args = JSON.stringify(lobby);
+
 
 							var msg = 'createLobby;' + user.token + ';' + user.steamid + ';' + args;
 
@@ -406,6 +464,59 @@ var wsClientLobby;
 							wsClientLobby.send(msg);
 						});
 					}
+			]),
+
+			'lobby': new Template ([
+				{
+					// Returns the lobby name
+					'lobbyName':function(args) {
+						return args[LOBBY_NAME];
+					},
+
+					// Returns the lobby region
+					'lobbyRegion':function(args) {
+						return ID_TO_REGION[args[LOBBY_REGION]];
+					},
+
+					'wtf':function(args) {
+						return $('<a>').attr('href', '#').text('START GAME').click(function() {
+							wsClientLobby.send("startGames");
+						});
+					}
+				},
+				'<h1>Lobby: [[lobbyName]]<br /> Region: [[lobbyRegion]]</h1>'+
+				'<h2>Addons</h2><br />',
+				'[[0]]',
+				function(args){
+					var ret = '';
+					var addons = args[LOBBY_ADDONS];
+					for(var addon in addons){
+						ret += addons[addon][ADDON_ID] + '<br />';
+					}
+					return ret;
+				},
+				'<h2>Players</h2><br />',
+				'[[1]]',
+				function(args){
+					var ret = '';
+					var teams = args[LOBBY_TEAMS];
+					for(var teamKey in teams){
+						if(!teams.hasOwnProperty(teamKey)){continue;}
+						var team = teams[teamKey];
+						ret += '<h3>' + team[TEAM_NAME] + '</h3><br />';
+						for(var playerKey in team[TEAM_PLAYERS]){
+							if(!team[TEAM_PLAYERS].hasOwnProperty(playerKey)){continue;}
+							var player = team[TEAM_PLAYERS][playerKey];
+							ret += 	'<a href="' + player[PLAYER_PROFILEURL] + '">'+
+										'<img src="' + player[PLAYER_AVATAR] + '">' + player[PLAYER_PERSONANAME]+
+									'</a>';
+						}
+					}
+					return ret;
+				},
+				'{{wtf}}'
+				
+
 			]),
 
 			// Lobby screen []
@@ -461,9 +572,9 @@ var wsClientLobby;
 				}
 				$('#app').html(lobbies);
 			},
-			'joinLobby':function(){
-				console.log('Got a join lobby');
-				console.log(arguments);
+			'joinLobby':function(e, x){
+				var lobby = JSON.parse(x[2]);
+				selectPage('lobby', lobby);
 			},
 			'validate':function(e, x){
 				if(x[1] == 'success') {
@@ -539,8 +650,9 @@ var wsClientLobby;
 			};
 
 			wsClientLobby.onerror = function(e, r, t){
-				// Retry the connection
-				setTimeout(setupWebLobbySocket, 1000);
+				if(wsClientLobby.readyState === 3){
+					//setTimeout(setupWebLobbySocket, 1000);
+				};
 			};
 
 			var onMessage = function(e){
