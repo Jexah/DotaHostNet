@@ -584,9 +584,9 @@ var wsClientLobby;
 					for(var addonKey in lobby[LOBBY_ADDONS]){
 						if(!lobby[LOBBY_ADDONS].hasOwnProperty(addonKey)){continue;};
 						var addon = lobby[LOBBY_ADDONS][addonKey];
-						lobbiesStr += addon[ADDON_ID] + ',';
+						lobbiesStr += addon[ADDON_ID] + ', ';
 					}
-					lobbiesStr = lobbiesStr.substring(0, lobbiesStr.length - 1) + "]";
+					lobbiesStr = lobbiesStr.substring(0, lobbiesStr.length - 2) + "]";
 					lobbiesStr += '<button class="joinlobby">Join</button><br />';
 				}
 				$('#app').html(lobbiesStr);
