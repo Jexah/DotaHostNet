@@ -74,14 +74,14 @@ var wsClientLobby;
 		var PLAYER_PROFILEURL = "3";
 
 		var ID_TO_REGION = {
-			"3":"America"
-			"7":"Europe"
+			"3":"America",
+			"7":"Europe",
 			"19":"Australia"
 		};
 
 		var REGION_TO_ID = {
-			"America":"3"
-			"Europe":"7"
+			"America":"3",
+			"Europe":"7",
 			"Australia":"19"
 		};
 
@@ -398,7 +398,7 @@ var wsClientLobby;
 				'<div class="row">',
 					'<div class="col-md-4"></div>',
 					'<div class="col-md-4">',
-					
+
 						// User is logged in
 						[function(args){return args[0];},
 							'<img style="display:block;margin-left:auto;margin-right:auto;" src="[[avatar]]" />'
@@ -575,22 +575,32 @@ var wsClientLobby;
 				$('#app').html("Legends of Dota installation complete! Loading lobbies...");
 			},
 			'getLobbies':function(e, x){
-				var lobbies = "";
-				for(var i = 1; i < x.length; ++x){
-					var properties = x[i].split("|");
-					var players = properties[1].split("-");
-					var addons = properties[2].split("-");
-					lobbies += "Name: ["+ properties[0] + "] Players: [" + players[0]+ "/" + players[1] + "] Addons: ";
-					for(var j = 0; j < addons.length; ++j){
-						 lobbies += "[" + addons[j] + ",";
+				var lobbiesStr = '';
+				var lobbies = JSON.parse(x[1]);
+				for(var lobbyKey in lobbies){
+					if(!lobbies.hasOwnProperty(lobbyKey)){continue;};
+					var lobby = lobbies[lobbyKey];
+					lobbiesStr += 'Name: <span class="lobbyname">' + lobby[LOBBY_NAME] + '</span> | Players: ' + lobby[LOBBY_CURRENT_PLAYERS] + '/' + lobby[LOBBY_MAX_PLAYERS] + ' | Addons: [';
+					for(var addonKey in lobby[LOBBY_ADDONS]){
+						if(!lobby[LOBBY_ADDONS].hasOwnProperty(addonKey)){continue;};
+						var addon = lobby[LOBBY_ADDONS][addonKey];
+						lobbiesStr += addon[ADDON_ID] + ',';
 					}
-					lobbies = lobbies.substring(0, lobbies.length - 1) + "]";
+					lobbiesStr = lobbiesStr.substring(0, lobbiesStr.length - 1) + "]";
+					lobbiesStr += '<button class="joinlobby">Join</button><br />';
 				}
-				$('#app').html(lobbies);
+				$('#app').html(lobbiesStr);
+				$('.joinlobby').click(function(){
+					wsClientLobby.send(packArguments('joinLobby', user.token, user.steamid, $(this).parent().find('.lobbyname').first().text()));
+				});
 			},
 			'joinLobby':function(e, x){
-				var lobby = JSON.parse(x[2]);
-				selectPage('lobby', lobby);
+				if(x[1] === 'success'){
+					var lobby = JSON.parse(x[2]);
+					selectPage('lobby', lobby);
+				}else{
+					console.log('Failed to join lobby: ' + x[2]);
+				}
 			},
 			'validate':function(e, x){
 				if(x[1] == 'success') {
@@ -599,6 +609,7 @@ var wsClientLobby;
 					// Show the div
 					$('#createLobbyDiv').show();
 					$('#verifying').hide();
+					wsClientLobby.send("getLobbies");
 				} else {
 					// Failed to verify
 				}
@@ -625,7 +636,10 @@ var wsClientLobby;
 				timeoutPrevention = setInterval(function(){wsClientManager.send("time");}, 1000);
 				connections++;
 				if(connections == 2){
-					$('#app').html('Click <a href="#" onclick="wsClientManager.send(\'' + packArguments('update', 'lod') + '\')">here</a> to download Legends of Dota!');
+					var newAppHtml = '<br />';
+					newAppHtml += 'Click <a href="#" onclick="wsClientManager.send(packArguments(\'update\', \'lod\'))";>here</a> to download Legends of Dota!';
+					$('#app').html(newAppHtml);
+
 				}
 			};
 
@@ -644,7 +658,7 @@ var wsClientLobby;
 
 			wsClientManager.onerror = function(e, r, t){
 				if(wsClientManager.readyState === 3){
-					$('#app').html('Download the app <a href="https://github.com/ash47/DotaHostAddons/releases/download/' + managerVersion + '/DotaHostManager.exe" download>here</a>!');
+					//$('#app').html('Download the app <a href="https://github.com/ash47/DotaHostAddons/releases/download/' + managerVersion + '/DotaHostManager.exe" download>here</a>!');
 				};
 				setTimeout(setupClientSocket, 1000);
 			};
@@ -656,7 +670,7 @@ var wsClientLobby;
 			wsClientLobby.onopen = function(e){
 				connections++;
 				if(connections == 2){
-					$('#app').html('Click <a href="#" onclick="wsClientManager.send(\'' + packArguments('update', 'lod') + '\')">here</a> to download Legends of Dota!');
+					$('#app').html('Click <a href="#" onclick="wsClientManager.send(packArguments(\'update\', \'lod\'));">here</a> to download Legends of Dota!');
 				}
 
 				// Ask for validation straight away
