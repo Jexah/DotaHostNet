@@ -51,6 +51,8 @@ var wsClientLobby;
 (function(){
 
 	$(document).ready(function(){
+		// Message seperator
+		var MSG_SEP = String.fromCharCode(0);
 
 		var LOBBY_NAME = "0";
 		var LOBBY_TEAMS = "1";
@@ -80,7 +82,7 @@ var wsClientLobby;
 		};
 
 
-		
+
 
 
 
@@ -318,6 +320,15 @@ var wsClientLobby;
 			}
 		};
 
+		// Packs arguments
+		function packArguments() {
+			// Build args array
+			var args = [];
+			for(var i=0; i<arguments.length; i++) args.push(arguments[i]);
+
+			return args.join(MSG_SEP);
+		}
+
 		var templates = {
 			// Home page [isLoggedIn:bool]
 			'home':new Template([
@@ -458,7 +469,7 @@ var wsClientLobby;
 							args = JSON.stringify(lobby);
 
 
-							var msg = 'createLobby;' + user.token + ';' + user.steamid + ';' + args;
+							var msg = packArguments('createLobby', user.token, user.steamid, args);
 
 							console.log('Sending message: '+msg);
 							wsClientLobby.send(msg);
@@ -515,7 +526,7 @@ var wsClientLobby;
 					return ret;
 				},
 				'{{wtf}}'
-				
+
 
 			]),
 
@@ -609,7 +620,7 @@ var wsClientLobby;
 				timeoutPrevention = setInterval(function(){wsClientManager.send("time");}, 1000);
 				connections++;
 				if(connections == 2){
-					$('#app').html('Click <a href="#" onclick="wsClientManager.send(\'update;lod\')">here</a> to download Legends of Dota!');
+					$('#app').html('Click <a href="#" onclick="wsClientManager.send(\'' + packArguments('update', 'lod') + '\')">here</a> to download Legends of Dota!');
 				}
 			};
 
@@ -619,7 +630,7 @@ var wsClientLobby;
 			};
 			var onMessage = function(e){
 				console.log(e.data);
-				var args = e.data.split(';');
+				var args = e.data.split(MSG_SEP);
 				if(wsHooks.hasOwnProperty(args[0])){
 					wsHooks[args[0]](e, args);
 				}
@@ -640,11 +651,11 @@ var wsClientLobby;
 			wsClientLobby.onopen = function(e){
 				connections++;
 				if(connections == 2){
-					$('#app').html('Click <a href="#" onclick="wsClientManager.send(\'update;lod\')">here</a> to download Legends of Dota!');
+					$('#app').html('Click <a href="#" onclick="wsClientManager.send(\'' + packArguments('update', 'lod') + '\')">here</a> to download Legends of Dota!');
 				}
 
 				// Ask for validation straight away
-				wsClientLobby.send('validate;' + user.token + ';' + user.steamid);
+				wsClientLobby.send(packArguments('validate', user.token, user.steamid));
 
 				// We should now be verified
 				isVerified = true;
@@ -662,7 +673,8 @@ var wsClientLobby;
 
 			var onMessage = function(e){
 				console.log(e.data);
-				var args = e.data.split(';');
+				var args = e.data.split(MSG_SEP);
+
 				if(wsHooks.hasOwnProperty(args[0])){
 					wsHooks[args[0]](e, args);
 				}
