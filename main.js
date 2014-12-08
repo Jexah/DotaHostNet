@@ -74,10 +74,14 @@ var wsClientLobby;
 		var PLAYER_PROFILEURL = "3";
 
 		var ID_TO_REGION = {
+			"3":"America"
+			"7":"Europe"
 			"19":"Australia"
 		};
 
 		var REGION_TO_ID = {
+			"America":"3"
+			"Europe":"7"
 			"Australia":"19"
 		};
 
@@ -330,6 +334,7 @@ var wsClientLobby;
 		}
 
 		var templates = {
+
 			// Home page [isLoggedIn:bool]
 			'home':new Template([
 				{
@@ -358,6 +363,7 @@ var wsClientLobby;
 					'<div class="col-md-3"></div>',
 					'<div class="col-md-6">',
 						'<span style="text-align:center;">',
+
 							// User is logged in
 							[function(args) {return args[0];},
 								'{{0}}', function(args) {
@@ -392,6 +398,7 @@ var wsClientLobby;
 				'<div class="row">',
 					'<div class="col-md-4"></div>',
 					'<div class="col-md-4">',
+					
 						// User is logged in
 						[function(args){return args[0];},
 							'<img style="display:block;margin-left:auto;margin-right:auto;" src="[[avatar]]" />'
@@ -526,8 +533,6 @@ var wsClientLobby;
 					return ret;
 				},
 				'{{wtf}}'
-
-
 			]),
 
 			// Lobby screen []
