@@ -509,7 +509,7 @@ var wsClientLobby;
 							var player = team[TEAM_PLAYERS][playerKey];
 							ret += 	'<a href="' + player[PLAYER_PROFILEURL] + '">'+
 										'<img src="' + player[PLAYER_AVATAR] + '">' + player[PLAYER_PERSONANAME]+
-									'</a>';
+									'</a><br />';
 						}
 					}
 					return ret;
@@ -585,6 +585,11 @@ var wsClientLobby;
 					$('#verifying').hide();
 				} else {
 					// Failed to verify
+				}
+			},
+			'gameServerInfo':function(e, x){
+				if(x[1] === "success"){
+					location.href = "steam://connect/" + x[2];
 				}
 			}
 		}
