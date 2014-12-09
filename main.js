@@ -73,6 +73,11 @@ var wsClientLobby;
 		var PLAYER_AVATAR = "2";
 		var PLAYER_PROFILEURL = "3";
 
+		var ADDON_STATUS_ERROR = "0";
+		var ADDON_STATUS_MISSING = "1";
+		var ADDON_STATUS_UPDATE = "2";
+		var ADDON_STATUS_READY = "3";
+
 		var ID_TO_REGION = {
 			"3":"America",
 			"7":"Europe",
@@ -85,10 +90,12 @@ var wsClientLobby;
 			"Australia":"19"
 		};
 
+		var connectedLobby = false;
+		var connectedClient = false;
 
+		var installedAddons = {};
 
-
-
+		var lobbies = {};
 
 		// Will contain the function to select pages
 		var selectPage;
@@ -98,7 +105,6 @@ var wsClientLobby;
 
 		var spinner = '<div class="spinner"><div class="spinner-container container1"><div class="circle1"></div><div class="circle2"></div><div class="circle3"></div><div class="circle4"></div></div><div class="spinner-container container2"><div class="circle1"></div><div class="circle2"></div><div class="circle3"></div><div class="circle4"></div></div><div class="spinner-container container3"><div class="circle1"></div><div class="circle2"></div><div class="circle3"></div><div class="circle4"></div></div></div>';
 
-		var connections = 0;
 
 		// args is an array of arguments
 		// funcs is an an object containing reusable functions
@@ -335,7 +341,7 @@ var wsClientLobby;
 
 		var templates = {
 
-			// Home page [isLoggedIn:bool]
+			// Home page [isLoggedIn:bool, connectedClient:bool, connectedLobby:bool]
 			'home':new Template([
 				{
 					// This will make a given element invisible if the user isn't verified
@@ -354,21 +360,28 @@ var wsClientLobby;
 
 					// Returns the user's avatar
 					'avatar':function(args) {
-						return user['avatarfull'];
+						return user['avatar'];
 					}
 				},
-				'<div class="row" style="height:200px;">',
-				'</div>',
-				'<div class="row" style="height:100px;">',
-					'<div class="col-md-3"></div>',
-					'<div class="col-md-6">',
+				// User is not logged in
+				[function(args) {return !args[0];},
+					'<div id="top_padding" class="row" style="height:200px;">'+
+					'</div>'
+				],
+				// User is logged in
+				[function(args) {return args[0];},
+					'<div id="top_padding" class="row" style="height:75px;">'+
+					'</div>'
+				],
+
+				'<div id="first_header" class="row" style="height:100px;">',
+					'<div id="first_left" class="col-md-3"></div>',
+					'<div id="first_middle" class="col-md-6">',
 						'<span style="text-align:center;">',
 
 							// User is logged in
 							[function(args) {return args[0];},
-								'{{0}}', function(args) {
-									return '<h1>Welcome back, ' + user['personaname'] + '</h1>';
-								},
+								'<h1>Welcome back, <img src="[[avatar]]" style="margin-right:5px;margin-bottom:5px;" />' + user['personaname'] + '</h1><br />',
 
 								// Verifiying Div
 								'<div id="verifying" [[notVerified]]>',
@@ -384,7 +397,29 @@ var wsClientLobby;
 											selectPage('createLobby');
 										});
 									},
-								'</div>',
+								'</div>'
+							],
+							[function(args) {return !args[1];},
+								// Download manager
+								'<div id="launchManagerDiv" [[isVerified]]>',
+									'<p>Click {{1}} to download the app.</p>',
+									function(args) {
+										return $('<a>').attr('href', '#').text('here').click(function() {
+											location.href = 'https://github.com/Jexah/DotaHostAddons/releases/download/' + managerVersion + '/DotaHostManager.exe';
+										});
+									},
+								'</div>'
+							],
+							[function(args) {return args[1];},
+								// Download LoD
+								'<div id="downloadLoDDiv" [[isVerified]]>',
+									'<p>Click {{2}} to download Legends of Dota.</p>',
+									function(args) {
+										return $('<a>').attr('href', '#').text('here').click(function() {
+											wsClientManager.send(packArguments("update", "lod"));
+										});
+									},
+								'</div>'
 							],
 
 							// User is not logged in
@@ -393,16 +428,11 @@ var wsClientLobby;
 							],
 						'</span>',
 					'</div>',
-					'<div class="col-md-3"></div>',
+					'<div id="first_right" class="col-md-3"></div>',
 				'</div>',
-				'<div class="row">',
-					'<div class="col-md-4"></div>',
-					'<div class="col-md-4">',
-
-						// User is logged in
-						[function(args){return args[0];},
-							'<img style="display:block;margin-left:auto;margin-right:auto;" src="[[avatar]]" />'
-						],
+				'<div id="second_header" class="row">',
+					'<div id="second_left" class="col-md-4"></div>',
+					'<div id="second_middle" class="col-md-4">',
 
 						// User is not logged in
 						[function(args){return !args[0];},
@@ -413,14 +443,19 @@ var wsClientLobby;
 							'</span>'
 						],
 					'</div>',
-					'<div class="col-md-4"></div>',
+					'<div id="second_right" class="col-md-4"></div>',
 				'</div>',
-				'<div class="row" style="height:20px;"></div>',
+				'<br />',
 				'<div class="row" style="min-height:40px;">',
 					[function(args){return args[0];},
 						'<span style="text-align:center;">',
 							'<div id="app">',
-								spinner,
+								'[[0]]',
+								function(args) {
+									return $('<a>').attr('href', '#').text('here').click(function() {
+										location.href = 'https://github.com/Jexah/DotaHostAddons/releases/download/' + managerVersion + '/DotaHostManager.exe';
+									});
+								},
 							'</div>',
 						'</span>',
 						'<div class="row">',
@@ -576,23 +611,8 @@ var wsClientLobby;
 			},
 			'getLobbies':function(e, x){
 				var lobbiesStr = '';
-				var lobbies = JSON.parse(x[1]);
-				for(var lobbyKey in lobbies){
-					if(!lobbies.hasOwnProperty(lobbyKey)){continue;};
-					var lobby = lobbies[lobbyKey];
-					lobbiesStr += 'Name: <span class="lobbyname">' + lobby[LOBBY_NAME] + '</span> | Players: ' + lobby[LOBBY_CURRENT_PLAYERS] + '/' + lobby[LOBBY_MAX_PLAYERS] + ' | Addons: [';
-					for(var addonKey in lobby[LOBBY_ADDONS]){
-						if(!lobby[LOBBY_ADDONS].hasOwnProperty(addonKey)){continue;};
-						var addon = lobby[LOBBY_ADDONS][addonKey];
-						lobbiesStr += addon[ADDON_ID] + ', ';
-					}
-					lobbiesStr = lobbiesStr.substring(0, lobbiesStr.length - 2) + "]";
-					lobbiesStr += '<button class="joinlobby">Join</button><br />';
-				}
-				$('#app').html(lobbiesStr);
-				$('.joinlobby').click(function(){
-					wsClientLobby.send(packArguments('joinLobby', user.token, user.steamid, $(this).parent().find('.lobbyname').first().text()));
-				});
+				lobbies = JSON.parse(x[1]);
+				
 			},
 			'joinLobby':function(e, x){
 				if(x[1] === 'success'){
@@ -605,15 +625,18 @@ var wsClientLobby;
 			'validate':function(e, x){
 				if(x[1] == 'success') {
 					// Verified successfully!
-
-					// Show the div
-					$('#createLobbyDiv').show();
-					$('#verifying').hide();
+					selectPage('home', [user != null, connectedClient, connectedLobby]);
 					wsClientLobby.send("getLobbies");
 				} else {
 					// Failed to verify
 				}
 			},
+			'addon':function(e, x){
+				var status = x[1];
+				var addonID = x[2];
+				installedAddons[addonID] = status;
+			},
+
 			'gameServerInfo':function(e, x){
 				if(x[1] === "success"){
 					location.href = "steam://connect/" + x[2];
@@ -622,29 +645,78 @@ var wsClientLobby;
 		}
 		var timeoutPrevention;
 
+		function showLobbies(){
+			for(var lobbyKey in lobbies){
+				if(!lobbies.hasOwnProperty(lobbyKey)){continue;};
+				var lobby = lobbies[lobbyKey];
+				lobbiesStr += 'Name: <span class="lobbyname">' + lobby[LOBBY_NAME] + '</span> | Players: ' + lobby[LOBBY_CURRENT_PLAYERS] + '/' + lobby[LOBBY_MAX_PLAYERS] + ' | Addons: [';
+				for(var addonKey in lobby[LOBBY_ADDONS]){
+					if(!lobby[LOBBY_ADDONS].hasOwnProperty(addonKey)){continue;};
+					var addon = lobby[LOBBY_ADDONS][addonKey];
+					lobbiesStr += addon[ADDON_ID] + ', ';
+				}
+				lobbiesStr = lobbiesStr.substring(0, lobbiesStr.length - 2) + "]";
+				lobbiesStr += ' <button class="joinlobby">Join</button><br />';
+			}
+			lobbiesStr += '<br />';
+			$('#app').html(lobbiesStr);
+			$('.joinlobby').click(function(){
+				var lobbyName = $(this).parent().find('.lobbyname').first().text();
+				var addons = lobbies[lobbyName][LOBBY_ADDONS];
+				for(var addonKey in addons){
+					if(!addons.hasOwnProperty(addonKey)){continue;};
+					var addon = addons[addonKey];
+					switch(installedAddons[addon[ADDON_ID]]){
+						case ADDON_STATUS_ERROR:
+							alert('An unknown error has occured.');
+							break;
+						case ADDON_STATUS_MISSING:
+							alert('Please install the addon.');
+							break;
+						case ADDON_STATUS_UPDATE:
+							alert('Please update the addon.');
+							break;
+						case ADDON_STATUS_READY:
+							wsClientLobby.send(packArguments('joinLobby', user.token, user.steamid, $(this).parent().find('.lobbyname').first().text()));
+							break;
+						default:
+							if(connectedClient){
+								alert('Please install the addon.');
+							}else{
+								alert('Please run the manager.');
+							}
+							break;
+					}
+				}
+			});
+		}
+
 		location.href = "dotahost://";
-
-		//$('#main').html(templates['home'].getString([user != null]));
-
-		//selectPage('createLobby');
-		selectPage('home', [user != null]);
 
 		function setupClientSocket(){
 			wsClientManager = new WebSocket("ws://127.0.0.1:2074");
 
 			wsClientManager.onopen = function(e){
+
+				wsClientManager.send("getAddonStatus");
+
 				timeoutPrevention = setInterval(function(){wsClientManager.send("time");}, 1000);
-				connections++;
-				if(connections == 2){
-					var newAppHtml = '<br />';
-					newAppHtml += 'Click <a href="#" onclick="wsClientManager.send(packArguments(\'update\', \'lod\'))";>here</a> to download Legends of Dota!';
-					$('#app').html(newAppHtml);
+
+				connectedClient = true;
+
+				if(connectedClient && connectedLobby){
+					//var newAppHtml = '<br />';
+					//newAppHtml += 'Click <a href="#" onclick="wsClientManager.send(packArguments(\'update\', \'lod\'))";>here</a> to download Legends of Dota!';
+					//$('#app').html(newAppHtml);
 
 				}
+
+				selectPage('home', [user != null, connectedClient, connectedLobby]);
 			};
 
 			wsClientManager.onclose = function(e){
-				connections--;
+				if(connectedClient){selectPage('home', [user != null, connectedClient, connectedLobby]);}
+				connectedClient = false;
 				clearInterval(timeoutPrevention);
 			};
 			var onMessage = function(e){
@@ -658,7 +730,7 @@ var wsClientLobby;
 
 			wsClientManager.onerror = function(e, r, t){
 				if(wsClientManager.readyState === 3){
-					//$('#app').html('Download the app <a href="https://github.com/ash47/DotaHostAddons/releases/download/' + managerVersion + '/DotaHostManager.exe" download>here</a>!');
+					//selectPage('home', [user != null, connectedClient, connectedLobby]);
 				};
 				setTimeout(setupClientSocket, 1000);
 			};
@@ -668,26 +740,32 @@ var wsClientLobby;
 			wsClientLobby = new WebSocket("ws://dotahost.net:2075");
 
 			wsClientLobby.onopen = function(e){
-				connections++;
-				if(connections == 2){
-					$('#app').html('Click <a href="#" onclick="wsClientManager.send(packArguments(\'update\', \'lod\'));">here</a> to download Legends of Dota!');
-				}
+
+				connectedLobby = true;
+
+				//if(connectedLobby && connectedClient){
+				//	$('#app').html('Click <a href="#" onclick="wsClientManager.send(packArguments(\'update\', \'lod\'));">here</a> to download Legends of Dota!');
+				//}
 
 				// Ask for validation straight away
 				wsClientLobby.send(packArguments('validate', user.token, user.steamid));
 
 				// We should now be verified
 				isVerified = true;
+
+				selectPage('home', [user != null, connectedClient, connectedLobby]);
 			};
 
 			wsClientLobby.onclose = function(e){
-				connections--;
+				if(connectedLobby){selectPage('home', [user != null, connectedClient, connectedLobby]);}
+				connectedLobby = false;
 			};
 
 			wsClientLobby.onerror = function(e, r, t){
 				if(wsClientLobby.readyState === 3){
-					//setTimeout(setupWebLobbySocket, 1000);
+					//selectPage('home', [user != null, connectedClient, connectedLobby]);
 				};
+				setTimeout(setupWebLobbySocket, 1000);
 			};
 
 			var onMessage = function(e){
