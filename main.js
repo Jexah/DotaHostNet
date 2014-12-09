@@ -78,6 +78,8 @@ var wsClientLobby;
 		var ADDON_STATUS_UPDATE = "2";
 		var ADDON_STATUS_READY = "3";
 
+		var currentPage = 'home';
+
 		var ID_TO_REGION = {
 			"3":"America",
 			"7":"Europe",
@@ -450,12 +452,55 @@ var wsClientLobby;
 					[function(args){return args[0];},
 						'<span style="text-align:center;">',
 							'<div id="app">',
-								'[[0]]',
-								function(args) {
-									return $('<a>').attr('href', '#').text('here').click(function() {
-										location.href = 'https://github.com/Jexah/DotaHostAddons/releases/download/' + managerVersion + '/DotaHostManager.exe';
+							'{{3}}',
+							function(args){
+								var lobbiesDiv = $('<div>');
+								for(var lobbyKey in lobbies){
+									if(!lobbies.hasOwnProperty(lobbyKey)){continue;};
+									var lobby = lobbies[lobbyKey];
+									var lobbyName = lobby[LOBBY_NAME];
+									var lobbyDiv = $('<div>').attr('class', 'lobby').attr('lobbyname', lobbyName);
+									lobbyDiv.html('Name: <span class="lobbyname">' + lobby[LOBBY_NAME] + '</span> | Players: ' + lobby[LOBBY_CURRENT_PLAYERS] + '/' + lobby[LOBBY_MAX_PLAYERS] + ' | Addons: [');
+									for(var addonKey in lobby[LOBBY_ADDONS]){
+										if(!lobby[LOBBY_ADDONS].hasOwnProperty(addonKey)){continue;};
+										var addon = lobby[LOBBY_ADDONS][addonKey];
+										lobbyDiv.append(addon[ADDON_ID] + ', ');
+									}
+									lobbyDiv.html(lobbyDiv.html().substring(0, lobbyDiv.html().length - 2) + "] ");
+									var joinBtn = $('<button>').attr('class', 'joinlobby').text('Join').click(function(){
+										var addons = lobbies[lobbyName][LOBBY_ADDONS];
+										for(var addonKey in addons){
+											if(!addons.hasOwnProperty(addonKey)){continue;};
+											var addon = addons[addonKey];
+											switch(installedAddons[addon[ADDON_ID]]){
+												case ADDON_STATUS_ERROR:
+													alert('An unknown error has occured.');
+													break;
+												case ADDON_STATUS_MISSING:
+													alert('Please install the addon.');
+													break;
+												case ADDON_STATUS_UPDATE:
+													alert('Please update the addon.');
+													break;
+												case ADDON_STATUS_READY:
+													wsClientLobby.send(packArguments('joinLobby', user.token, user.steamid, $(this).parent().attr('lobbyname')));
+													break;
+												default:
+													if(connectedClient){
+														alert('Please install the addon.');
+													}else{
+														alert('Please run the manager.');
+													}
+													break;
+											}
+										}
 									});
-								},
+									lobbyDiv.append(joinBtn);
+									lobbiesDiv.append(lobbyDiv);
+									lobbiesDiv.append('<br />');
+								}
+								return lobbiesDiv;
+							},
 							'</div>',
 						'</span>',
 						'<div class="row">',
@@ -581,6 +626,7 @@ var wsClientLobby;
 		selectPage = function(templateName, args){
 			if(templates[templateName]) {
 				templates[templateName].apply(args, '#main');
+				currentPage = templateName;
 			} else {
 				console.log('WARNING: Failed to find template named ' + templateName);
 			}
@@ -612,7 +658,7 @@ var wsClientLobby;
 			'getLobbies':function(e, x){
 				var lobbiesStr = '';
 				lobbies = JSON.parse(x[1]);
-				
+				selectPage(currentPage, [user != null, connectedClient, connectedLobby]);
 			},
 			'joinLobby':function(e, x){
 				if(x[1] === 'success'){
@@ -644,52 +690,6 @@ var wsClientLobby;
 			}
 		}
 		var timeoutPrevention;
-
-		function showLobbies(){
-			for(var lobbyKey in lobbies){
-				if(!lobbies.hasOwnProperty(lobbyKey)){continue;};
-				var lobby = lobbies[lobbyKey];
-				lobbiesStr += 'Name: <span class="lobbyname">' + lobby[LOBBY_NAME] + '</span> | Players: ' + lobby[LOBBY_CURRENT_PLAYERS] + '/' + lobby[LOBBY_MAX_PLAYERS] + ' | Addons: [';
-				for(var addonKey in lobby[LOBBY_ADDONS]){
-					if(!lobby[LOBBY_ADDONS].hasOwnProperty(addonKey)){continue;};
-					var addon = lobby[LOBBY_ADDONS][addonKey];
-					lobbiesStr += addon[ADDON_ID] + ', ';
-				}
-				lobbiesStr = lobbiesStr.substring(0, lobbiesStr.length - 2) + "]";
-				lobbiesStr += ' <button class="joinlobby">Join</button><br />';
-			}
-			lobbiesStr += '<br />';
-			$('#app').html(lobbiesStr);
-			$('.joinlobby').click(function(){
-				var lobbyName = $(this).parent().find('.lobbyname').first().text();
-				var addons = lobbies[lobbyName][LOBBY_ADDONS];
-				for(var addonKey in addons){
-					if(!addons.hasOwnProperty(addonKey)){continue;};
-					var addon = addons[addonKey];
-					switch(installedAddons[addon[ADDON_ID]]){
-						case ADDON_STATUS_ERROR:
-							alert('An unknown error has occured.');
-							break;
-						case ADDON_STATUS_MISSING:
-							alert('Please install the addon.');
-							break;
-						case ADDON_STATUS_UPDATE:
-							alert('Please update the addon.');
-							break;
-						case ADDON_STATUS_READY:
-							wsClientLobby.send(packArguments('joinLobby', user.token, user.steamid, $(this).parent().find('.lobbyname').first().text()));
-							break;
-						default:
-							if(connectedClient){
-								alert('Please install the addon.');
-							}else{
-								alert('Please run the manager.');
-							}
-							break;
-					}
-				}
-			});
-		}
 
 		location.href = "dotahost://";
 
