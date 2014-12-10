@@ -383,7 +383,7 @@ var wsClientLobby;
 
 							// User is logged in
 							[function(args) {return args[0];},
-								'<h1>Welcome back, <img src="[[avatar]]" style="margin-right:5px;margin-bottom:5px;" />' + user['personaname'] + '</h1><br />',
+								'<h1>Welcome back, <img src="[[avatar]]" style="margin-right:5px;margin-bottom:5px;" />' + (user && user['personaname']) + '</h1><br />',
 
 								// Verifiying Div
 								'<div id="verifying" [[notVerified]]>',
@@ -594,17 +594,20 @@ var wsClientLobby;
 					return ret;
 				},
 				'<h2>Players</h2><br />',
-				'[[1]]',
+				'{{1}}',
 				function(args){
-					var ret = '';
+					var teamsDiv = $('<div>');
 					var teams = args[LOBBY_TEAMS];
 					for(var teamKey in teams){
 						if(!teams.hasOwnProperty(teamKey)){continue;}
 						var team = teams[teamKey];
-						ret += '<h3>' + team[TEAM_NAME] + '</h3><br />';
+						var teamDiv = $('<div>');
+						var teamHeaderDiv = $('<h3>');
+						teamDiv.append( + team[TEAM_NAME] + '</h3><br />');
 						for(var playerKey in team[TEAM_PLAYERS]){
 							if(!team[TEAM_PLAYERS].hasOwnProperty(playerKey)){continue;}
 							var player = team[TEAM_PLAYERS][playerKey];
+
 							ret += 	'<a href="' + player[PLAYER_PROFILEURL] + '">'+
 										'<img src="' + player[PLAYER_AVATAR] + '">' + player[PLAYER_PERSONANAME]+
 									'</a><br />';
@@ -692,6 +695,8 @@ var wsClientLobby;
 		var timeoutPrevention;
 
 		location.href = "dotahost://";
+
+		selectPage('home', [user != null, connectedClient, connectedLobby]);
 
 		function setupClientSocket(){
 			wsClientManager = new WebSocket("ws://127.0.0.1:2074");
