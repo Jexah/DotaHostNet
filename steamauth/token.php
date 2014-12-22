@@ -20,13 +20,7 @@ function generateToken() {
     $personaname = $mysqli->real_escape_string($_SESSION['steam_personaname']);
     $profileurl = $mysqli->real_escape_string($_SESSION['steam_profileurl']);
 
-    // Build query
-    $query = "REPLACE INTO steamUsers
-        (steamID, avatar, personaname, profileurl) VALUES
-        (".$steamID.", '".$avatar."', '".$personaname."', '".$profileurl."')";
-
-    // Run query
-    if($mysqli->query($query)) {
+    function updateToken($mysqli, $steamID) {
         // Generate a token
         $token = md5(uniqid());
         $safeToken = $mysqli->real_escape_string($token);
@@ -47,11 +41,50 @@ function generateToken() {
             exit(1);
             return;
         }
+    }
 
-    } else {
-        echo "Failed to add user into DB.";
-        exit(1);
-        return;
+    // Check if the account already exists
+    $query = "SELECT avatar, personaname, profileurl, badges, cosmetics FROM steamUsers WHERE steamID=".$steamID;
+    if($result = $mysqli->query($query)) {
+        // Does this user already exist?
+        if($result->num_rows <= 0) {
+            // User does NOT exist
+            $query = "INSERT INTO steamUsers
+                (steamID, avatar, personaname, profileurl, badges, cosmetics) VALUES
+                (".$steamID.", '".$avatar."', '".$personaname."', '".$profileurl."', 0, 0)";
+
+            // Store badge stuff
+            $_SESSION['steam_badges'] = 0;
+            $_SESSION['steam_cosmetics'] = 0;
+
+            // Run the query
+            if($mysqli->query($query)) {
+                return updateToken($mysqli, $steamID);
+            } else {
+                echo "Failed to store user!";
+                exit(1);
+                return;
+            }
+        } else {
+            // User exists, grab data
+            $row = $result->fetch_row();
+
+            // Update their fields
+            $query = "UPDATE steamUsers SET avatar='".$avatar."', personaname='".$personaname."', profileurl='".$profileurl."' WHERE steamID=".$steamID;
+
+            // Store badge stuff
+            $_SESSION['steam_badges'] = $row[3];
+            $_SESSION['steam_cosmetics'] = $row[4];
+
+            // Run the query
+            if($mysqli->query($query)) {
+                return updateToken($mysqli, $steamID);
+            } else {
+                echo "Failed to update user!";
+                exit(1);
+                return;
+            }
+        }
     }
 }
 ?>

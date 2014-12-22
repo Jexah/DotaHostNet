@@ -47,5 +47,7 @@
     $steamprofile['primaryclanid'] = $_SESSION['steam_primaryclanid'];
     $steamprofile['timecreated'] = $_SESSION['steam_timecreated'];
     $steamprofile['token'] = $_SESSION['steam_token'];
+    $steamprofile['badges'] = $_SESSION['steam_badges'];
+    $steamprofile['cosmetics'] = $_SESSION['steam_cosmetics'];
 ?>
 
