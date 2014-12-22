@@ -20,6 +20,8 @@
 		primaryclanid: <?php echo($steamprofile['primaryclanid']); ?>,
 		timecreated: <?php echo($steamprofile['timecreated']); ?>,
 		token: <?php echo('"' . $steamprofile['token'] . '"'); ?>,
+		badges: <?php echo($steamprofile['badges']); ?>,
+		cosmetics: <?php echo($steamprofile['cosmetics']); ?>,
 	};
 <?php
 	} else {
