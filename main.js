@@ -72,11 +72,21 @@ var wsClientLobby;
 		var PLAYER_PERSONANAME = "1";
 		var PLAYER_AVATAR = "2";
 		var PLAYER_PROFILEURL = "3";
+		var PLAYER_BADGES = "4";
+		var PLAYER_COSMETICS = "5";
 
 		var ADDON_STATUS_ERROR = "0";
 		var ADDON_STATUS_MISSING = "1";
 		var ADDON_STATUS_UPDATE = "2";
 		var ADDON_STATUS_READY = "3";
+
+		var COSMETICS = {
+			'0':'',
+			'1':' list-group-item-success',
+			'2':' list-group-item-info',
+			'3':' list-group-item-warning',
+			'4':' list-group-item-danger'
+		}
 
 		var TRANSPARENT_IMAGE = 'http://upload.wikimedia.org/wikipedia/commons/c/ce/Transparent.gif';
 
@@ -589,7 +599,7 @@ var wsClientLobby;
 					'<div class="col-lg-0 col-md-0 col-sm-0 column col-xl-2"></div>',
 					'<div class="col-lg-8 col-md-8 col-sm-8 column col-xl-6">',
 						'<div class="well well-sm" style="height:300px;">',
-							'<div id="lodLobbyChat" style="width:100%;height:calc(100% - 24px);overflow-y:auto;">',
+							'<div id="lodLobbyChat" style="width:100%;height:calc(100% - 24px);overflow-y:auto;">', 
 							'</div>',
 							'<div class="input-group" style="margin:0 -11px 0 -10px;">',
 								'{{4}}',
@@ -607,7 +617,7 @@ var wsClientLobby;
 											var chatTextElement = $('#lodLobbyChatText')
 											var chatText = chatTextElement.val();
 											if(chatText != ''){
-												addChat($('#lodLobbyChat'), user['personaname'], chatText);
+												addChat($('#lodLobbyChat'), user['personaname'], chatText, user['cosmetics']);
 												wsClientLobby.send(packArguments('chat', chatText));
 												chatTextElement.val('');
 											}
@@ -699,6 +709,7 @@ var wsClientLobby;
 			},
 			'chat':function(e, x){
 				var personaname;
+				var cosmetics;
 				var teams = currentLobby[LOBBY_TEAMS];
 				for(var teamKey in teams){
 					var team = teams[teamKey];
@@ -707,10 +718,11 @@ var wsClientLobby;
 						var player = players[playerKey];
 						if(player[PLAYER_STEAMID] == x[1]){
 							personaname = player[PLAYER_PERSONANAME];
+							personaname = player[PLAYER_COSMETICS];
 						}
 					}
 				}
-				addChat($('#lodLobbyChat'), personaname, x[2]);
+				addChat($('#lodLobbyChat'), personaname, x[2], cosmetics);
 			},
 			'addPlayerToLobby':function(e, x){
 				var player = JSON.parse(x[1]);
@@ -808,16 +820,14 @@ var wsClientLobby;
 
 		selectPage('home', [user != null]);
 
-		function addChat(chatContainerElement, personaname, text){
+		function addChat(chatContainerElement, personaname, text, cosmetics){
 			var scrollDown = chatContainerElement.scrollTop() + chatContainerElement.innerHeight() + 10 >= chatContainerElement.prop('scrollHeight');
 			chatContainerElement.append(
-				$('<span>').attr('style', 'white-space:nowrap;').append(
-					$('<span>').append(
-						$('<strong>').text(personaname + ': ')
-					).append(
-						$('<span>').text(text).attr('style', 'white-space:normal;word-wrap:break-word;')
-					).append('<br />')
-				)
+				$('<span>').attr({'style':'white-space:nowrap;display:block;width:100%;', 'class':COSMETICS[''+cosmetics]}).append(
+					$('<strong>').text(personaname + ': ')
+				).append(
+					$('<span>').text(text).attr('style', 'white-space:normal;word-wrap:break-word;')
+				).append('<br />')
 			);
 			if(scrollDown){
 				chatContainerElement.scrollTop(chatContainerElement.prop('scrollHeight'));
@@ -834,13 +844,14 @@ var wsClientLobby;
 				player = {};
 				player[PLAYER_PROFILEURL] = '#';
 				player[PLAYER_AVATAR] = TRANSPARENT_IMAGE,
-				player[PLAYER_PERSONANAME] = 'Empty'
+				player[PLAYER_PERSONANAME] = 'Empty',
+				player[PLAYER_COSMETICS] = '0'
 				empty = true;
 			}
 			var nameSpan = $('<span>').text(player[PLAYER_PERSONANAME]);
 			var img = $('<img>').attr({'src':player[PLAYER_AVATAR], 'style':'border:0;background-size:contain;height:32px;width:32px;margin-'+(avatarLeft?'right':'left')+':10px;'});
-
-			listGroup.append($('<a>').attr({'id':''+teamid+slotid, 'slotid':slotid, 'href':player[PLAYER_PROFILEURL], 'onfocus':'this.blur();', 'tabindex':'-1', 'target':(empty?'_self':'_blank'), 'style':'white-space:nowrap;padding:10px 10px;overflow:hidden;', 'class':'list-group-item'})
+			var cosmetic = 
+			listGroup.append($('<a>').attr({'id':''+teamid+slotid, 'slotid':slotid, 'href':player[PLAYER_PROFILEURL], 'onfocus':'this.blur();', 'tabindex':'-1', 'target':(empty?'_self':'_blank'), 'style':'white-space:nowrap;padding:10px 10px;overflow:hidden;', 'class':'list-group-item'+(COSMETICS[''+player[PLAYER_COSMETICS]])})
 				.append(avatarLeft?img:nameSpan)
 				.append(avatarLeft?nameSpan:img)
 				.click(function(e){
@@ -941,11 +952,13 @@ var wsClientLobby;
 				return;
 			}
 			if(!player){
+				element.attr('class', 'list-group-item');
 				element.attr('href', '#');
 				element.find('span').first().text('Empty');
 				element.find('img').first().attr('src', TRANSPARENT_IMAGE);
 				return;
 			}
+			element.attr('class', 'list-group-item'+(COSMETICS[''+player[PLAYER_COSMETICS]]));
 			element.attr('href', player[PLAYER_PROFILEURL]);
 			element.find('span').first().text(player[PLAYER_PERSONANAME]);
 			element.find('img').first().attr('src', player[PLAYER_AVATAR]);
