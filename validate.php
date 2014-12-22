@@ -20,7 +20,7 @@
         $token = $mysqli->real_escape_string($_GET['token']);
 
         // Create query
-        $query = "SELECT avatar, personaname, profileurl FROM steamUsers NATURAL JOIN sessionKeys WHERE sessionKeys.steamID = '".$steamID."' AND token = '".$token."'";
+        $query = "SELECT avatar, personaname, profileurl, badges, cosmetics FROM steamUsers NATURAL JOIN sessionKeys WHERE sessionKeys.steamID = '".$steamID."' AND token = '".$token."'";
 
         // Run the query
         $result = $mysqli->query($query);
@@ -28,7 +28,7 @@
 
         // Check if we found any
         if($row) {
-?>{"0":"<?PHP echo $steamID; ?>","1":"<?PHP echo addslashes($row[1]); ?>","2":"<?PHP echo $row[0]; ?>","3":"<?PHP echo $row[2]; ?>"}<?PHP
+?>{"0":"<?PHP echo $steamID; ?>","1":"<?PHP echo addslashes($row[1]); ?>","2":"<?PHP echo $row[0]; ?>","3":"<?PHP echo $row[2]; ?>","4":"<?PHP echo $row[3]; ?>","5":"<?PHP echo $row[4]; ?>"}<?PHP
         } else {
             echo $failString;
             return;
