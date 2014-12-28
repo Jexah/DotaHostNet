@@ -80,6 +80,28 @@ var wsClientLobby;
 		var ADDON_STATUS_UPDATE = "2";
 		var ADDON_STATUS_READY = "3";
 
+		var BADGES_TEXT = 0;
+		var BADGES_CLASS = 1;
+
+		var BADGES = [
+			[
+				'Veteran',
+				'Member',
+				'Donor',
+				'Volunteer',
+				'Warning',
+				'Admin'
+			],
+			[
+				'label label-default',
+				'label label-primary',
+				'label label-success',
+				'label label-info',
+				'label label-warning',
+				'label label-danger'
+			]
+		];
+
 		var COSMETICS = {
 			'0':'',
 			'1':' list-group-item-success',
@@ -479,50 +501,58 @@ var wsClientLobby;
 
 			// Create lobby page []
 			'createLobby': new Template ([
-				'<h1>Create a lobby</h1>'+
-				'<h2>Settings</h2>'+
-				'<p>No settings for shoe!</p>',
-				'Lobby name: <input id="inputLobbyName" text="text">',
-				'<p>Click {{0}} to create a lobby!</p>',
-					function(args) {
-						return $('<a>').attr('href', '#').text('here').click(function() {
+				'<div class="row clearfix">',
+					'<div class="col-md-3 column">',
+					'</div>',
+					'<div class="col-md-6 column">',
+						'<h1>Create a lobby</h1>',
+						'<h2>Settings</h2>',
+						'<p>No settings for shoe!</p>',
+						'Lobby name: <input id="inputLobbyName" text="text">',
+						'<p>Click {{0}} to create a lobby!</p>',
+						function(args) {
+							return $('<a>').attr('href', '#').text('here').click(function() {
 
-							var lobby = {};
-							var addon = {};
-							addon[ADDON_ID] = "lod";
-							addon[ADDON_OPTIONS] = {"pickingStyle":"All Pick"};
+								var lobby = {};
+								var addon = {};
+								addon[ADDON_ID] = "lod";
+								addon[ADDON_OPTIONS] = {"pickingStyle":"All Pick"};
 
-							var addons = {"0":addon};
+								var addons = {"0":addon};
 
-							var team1 = {};
-							team1[TEAM_NAME] = "Radiant";
-							team1[TEAM_MAX_PLAYERS] = "5";
-							team1[TEAM_PLAYERS] = {};
+								var team1 = {};
+								team1[TEAM_NAME] = "Radiant";
+								team1[TEAM_MAX_PLAYERS] = "5";
+								team1[TEAM_PLAYERS] = {};
 
-							var team2 = {};
-							team2[TEAM_NAME] = "Dire";
-							team2[TEAM_MAX_PLAYERS] = "5";
-							team2[TEAM_PLAYERS] = {};
-
-
-							var teams = {"0":team1,"1":team2};
-
-							lobby[LOBBY_NAME] = $("#inputLobbyName").val() || user['personaname'] + "'s Lobby";
-							lobby[LOBBY_CURRENT_PLAYERS] = "0";
-							lobby[LOBBY_MAX_PLAYERS] = "2";
-							lobby[LOBBY_REGION] = REGION_TO_ID["Australia"];
-							lobby[LOBBY_TEAMS] = teams;
-							lobby[LOBBY_ADDONS] = addons;
-
-							args = JSON.stringify(lobby);
+								var team2 = {};
+								team2[TEAM_NAME] = "Dire";
+								team2[TEAM_MAX_PLAYERS] = "5";
+								team2[TEAM_PLAYERS] = {};
 
 
-							var msg = packArguments('createLobby', args);
+								var teams = {"0":team1,"1":team2};
 
-							console.log('Sending message: '+msg);
-							wsClientLobby.send(msg);
-						});
-					}
+								lobby[LOBBY_NAME] = $("#inputLobbyName").val() || user['personaname'] + "'s Lobby";
+								lobby[LOBBY_CURRENT_PLAYERS] = "0";
+								lobby[LOBBY_MAX_PLAYERS] = "2";
+								lobby[LOBBY_REGION] = REGION_TO_ID["Australia"];
+								lobby[LOBBY_TEAMS] = teams;
+								lobby[LOBBY_ADDONS] = addons;
+
+								args = JSON.stringify(lobby);
+
+
+								var msg = packArguments('createLobby', args);
+
+								console.log('Sending message: '+msg);
+								wsClientLobby.send(msg);
+							});
+						},
+					'</div>',
+					'<div class="col-md-3 column">',
+					'</div>',
+				'</div>'				
 			]),
 
 			'lobby-lod': new Template ([
@@ -693,6 +723,9 @@ var wsClientLobby;
 				wsClientManager.send('getAddonStatus');
 			},
 			'page':function(e, x){
+				if(x[1] == currentPage){
+					return;
+				}
 				switch(x[1]){
 					case 'home':
 						selectPage(x[1], [user != null]);
@@ -771,8 +804,9 @@ var wsClientLobby;
 			'validate':function(e, x){
 				if(x[1] == 'success') {
 					verified = true;
+					wsClientLobby.send('getPage');
 				} else {
-					// Failed to verify
+					selectPage('home', [user != null]);
 				}
 			},
 			'addonStatus':function(e, x){
@@ -818,8 +852,6 @@ var wsClientLobby;
 		}
 		var timeoutPrevention;
 
-		selectPage('home', [user != null]);
-
 		function addChat(chatContainerElement, personaname, text, cosmetics){
 			var scrollDown = chatContainerElement.scrollTop() + chatContainerElement.innerHeight() + 10 >= chatContainerElement.prop('scrollHeight');
 			chatContainerElement.append(
@@ -845,22 +877,32 @@ var wsClientLobby;
 				player[PLAYER_PROFILEURL] = '#';
 				player[PLAYER_AVATAR] = TRANSPARENT_IMAGE,
 				player[PLAYER_PERSONANAME] = 'Empty',
-				player[PLAYER_COSMETICS] = '0'
+				player[PLAYER_COSMETICS] = '0',
+				player[PLAYER_BADGES] = '0'
 				empty = true;
 			}
-			var nameSpan = $('<span>').text(player[PLAYER_PERSONANAME]);
+			var nameSpan = $('<span>').attr('class', 'name').text(player[PLAYER_PERSONANAME]);
 			var img = $('<img>').attr({'src':player[PLAYER_AVATAR], 'style':'border:0;background-size:contain;height:32px;width:32px;margin-'+(avatarLeft?'right':'left')+':10px;'});
-			var cosmetic = 
-			listGroup.append($('<a>').attr({'id':''+teamid+slotid, 'slotid':slotid, 'href':player[PLAYER_PROFILEURL], 'onfocus':'this.blur();', 'tabindex':'-1', 'target':(empty?'_self':'_blank'), 'style':'white-space:nowrap;padding:10px 10px;overflow:hidden;', 'class':'list-group-item'+(COSMETICS[''+player[PLAYER_COSMETICS]])})
-				.append(avatarLeft?img:nameSpan)
-				.append(avatarLeft?nameSpan:img)
+			var badgesSpan = $('<span>').attr('class', 'badges '+(avatarLeft?'pull-right ':'pull-left '));
+			var badgesNum = parseInt(player[PLAYER_BADGES]);
+			for(var i = (avatarLeft?0:5); (avatarLeft?i<=5:i>=0); (avatarLeft?++i:--i)){
+				var bitNum = Math.pow(2, i);
+				console.log(badgesNum+':'+bitNum+':'+(badgesNum & bitNum));
+				if((badgesNum & bitNum) == bitNum){
+					badgesSpan.append($('<span>').attr('class', BADGES[BADGES_CLASS][i]).text(BADGES[BADGES_TEXT][i]));
+				}
+			}
+			var container = $('<a>').attr({'id':''+teamid+slotid, 'slotid':slotid, 'href':player[PLAYER_PROFILEURL], 'onfocus':'this.blur();', 'tabindex':'-1', 'target':(empty?'_self':'_blank'), 'style':'white-space:nowrap;padding:10px 10px;overflow:hidden;', 'class':'list-group-item'+(COSMETICS[''+player[PLAYER_COSMETICS]])})
+				.append(avatarLeft?img:badgesSpan)
+				.append(nameSpan)
+				.append(avatarLeft?badgesSpan:img)
 				.click(function(e){
 					if(empty){
 						e.preventDefault();
 						wsClientLobby.send(packArguments('swapTeam', $(this).attr('slotid'), teamid));
 					}
-				})
-			);
+				});
+			listGroup.append(container);
 		}
 
 		function populateLobbies(lobbiesStr){
@@ -943,7 +985,7 @@ var wsClientLobby;
 				$('#homeLobbiesTable').html(lobbiesTable);
 		}
 
-		function setTeamListElementToPlayer(element, player, deleteSlot){
+		function setTeamListElementToPlayer(element, player, avatarLeft, deleteSlot){
 			if(typeof deleteSlot === "undefined") {
 				deleteSlot = false;
 			}
@@ -954,20 +996,35 @@ var wsClientLobby;
 			if(!player){
 				element.attr('class', 'list-group-item');
 				element.attr('href', '#');
-				element.find('span').first().text('Empty');
+				element.find('span.name').text('Empty');
+				element.find('span.badges').html('');
 				element.find('img').first().attr('src', TRANSPARENT_IMAGE);
+				element.click(function(e){
+					e.preventDefault();
+					var thisId = $(this).attr('id');
+					wsClientLobby.send(packArguments('swapTeam', thisId[1], thisId[0]));
+				});
 				return;
 			}
 			element.attr('class', 'list-group-item'+(COSMETICS[''+player[PLAYER_COSMETICS]]));
 			element.attr('href', player[PLAYER_PROFILEURL]);
-			element.find('span').first().text(player[PLAYER_PERSONANAME]);
+			element.find('span.name').text(player[PLAYER_PERSONANAME]);
+			var badgesSpan = element.find('span.badges').first().html('');
+			var badgesNum = parseInt(player[PLAYER_BADGES]);
+			for(var i = (avatarLeft?0:5); (avatarLeft?i<=5:i>=0); (avatarLeft?++i:--i)){
+				var bitNum = Math.pow(2, i);
+				if((badgesNum & bitNum) == bitNum){
+					badgesSpan.append($('<span>').attr('class', BADGES[BADGES_CLASS][i]).text(BADGES[BADGES_TEXT][i]));
+				}
+			}
 			element.find('img').first().attr('src', player[PLAYER_AVATAR]);
+			element.off('click');
 		}
 
 		function addPlayerToTeam(player, team, slot, teamid){
 			team[TEAM_PLAYERS][slot] = player;
 			if($('#'+teamid+slot).length){
-				setTeamListElementToPlayer($('#'+teamid+slot), player);
+				setTeamListElementToPlayer($('#'+teamid+slot), player, teamid==0);
 			}else{
 				addPlayerToTeamList($('#teamList'+teamid), team[TEAM_PLAYERS], team, teamid, slot, teamid==0);
 			}
@@ -976,7 +1033,7 @@ var wsClientLobby;
 		function removePlayerFromTeam(player, playerKey, team, teamid, deleteSlot){
 			var players = team[TEAM_PLAYERS];
 			delete players[playerKey];
-			setTeamListElementToPlayer($('#'+teamid+playerKey), null, deleteSlot);
+			setTeamListElementToPlayer($('#'+teamid+playerKey), null, teamid==0, deleteSlot);
 		}
 
 		function setupClientSocket(){
@@ -1093,6 +1150,8 @@ var wsClientLobby;
 			};
 			wsClientLobby.onmessage = onMessage;
 		};
+
+		selectPage('home', [user != null]);
 
 		if(user != null){
 			setTimeout(setupClientSocket, 1000);
