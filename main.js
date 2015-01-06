@@ -120,6 +120,8 @@ var wsClientLobby;
 		var currentPlayerID = '';
 		var thisPlayer = {};
 
+		var gameInfoPatched = null;
+
 		var lobbiesChangedTimeout = false;
 
 		var downloadStarted = { 'lod': false };
@@ -385,11 +387,13 @@ var wsClientLobby;
 
 		// Packs arguments
 		function packArguments() {
-			// Build args array
-			var args = [];
-			for(var i=0; i<arguments.length; i++) args.push(arguments[i]);
+			if( typeof someVar === 'string' ) {// Build args array
+				var args = [];
+				for(var i=0; i<arguments.length; i++) args.push(arguments[i]);
 
-			return args.join(MSG_SEP);
+				return args.join(MSG_SEP);
+			}
+			return arguments.join(MSG_SEP);
 		}
 
 		var templates = {
@@ -836,13 +840,28 @@ var wsClientLobby;
 				}
 			},
 
-			'gameServerInfo':function(e, x){
+			'connectToServer':function(e, x){
 				if(x[1] === "success"){
 					$('#leaveLobbyReconnect').text('Reconnect').click(function(){
 						location.href = "steam://connect/" + x[2];
 					});
 					location.href = "steam://connect/" + x[2];
 				}
+			},
+
+			'gameServerInfo':function(e, x){
+				if(x[1] === "success"){
+					wsClientManager.send(packArguments(x[0], x[2], currentLobby));
+				}
+			},
+
+			'patchGameInfo':function(e, x){
+				setGameInfoPatched(x[1] == '1');
+			},
+
+			'tryPatchGameInfo':function(e, x){
+				setGameInfoPatched(x[1] == '1');
+				alert(gameInfoPatched?'Patch successful!':'Patch failed!');
 			},
 
 			'autorun':function(e, x){
@@ -966,6 +985,9 @@ var wsClientLobby;
 					if(lobbiesChangedTimeout){
 						return;
 					}
+					if(!gameInfoPatched){
+						alert('Please patch gameinfo (in settings).');
+					}
 					var addons = lobbies[lobbyName][LOBBY_ADDONS];
 					for(var addonKey in addons){
 						if(!addons.hasOwnProperty(addonKey)){continue;};
@@ -1059,6 +1081,7 @@ var wsClientLobby;
 				clearTimeout(launchModManagerTimeout);
 
 				wsClientManager.send("getAddonStatus");
+				wsClientManager.send('getPatchGameInfo');
 
 				timeoutPrevention = setInterval(function(){wsClientManager.send("time");}, 1000);
 
@@ -1181,6 +1204,17 @@ var wsClientLobby;
 			setTimeout(setupWebLobbySocket, 1000);
 		}
 
+		function setGameInfoPatched(patched){
+			gameInfoPatched = patched;
+			var div = $('#settingsBodyPatchGameInfo');
+			var group = div.children(':eq(0)');
+			var span1 = group.children(':eq(0)');
+			var btn = group.find('button');
+			span1.attr({'class':'input-group-addon '+(gameInfoPatched?'list-group-item-success':'list-group-item-danger')})
+			btn.attr({'class':'btn '+(gameInfoPatched?'btn-success':'btn-danger')}).text((gameInfoPatched?'Patched':'Patch'));
+			btn.prop('disabled', gameInfoPatched);
+		}
+
 		function updateSettingsOptions(){
 			if(connectedClient){
 				$('#settingsBody').html('').append(
@@ -1194,7 +1228,7 @@ var wsClientLobby;
 						$('<span>').attr('class', 'help-block').text('If this is selected, the ModManager will automatically launch when you visit this website. This requires administrator privillages on the computer you are using.')
 					)
 				).append(
-					$('<div>').attr('id', 'settingsBodyDotaPath').append(
+					$('<div>').attr({'id':'settingsBodyDotaPath', 'style':'margin-bottom:40px;'}).append(
 						$('<div>').attr({'class':'input-group'}).append(
 							$('<span>').attr({'class':'input-group-addon', 'style':'text-align:left;'}).text('Dota Path:')
 						).append(
@@ -1212,6 +1246,20 @@ var wsClientLobby;
 					).append(
 						$('<span>').attr('class', 'help-block').text('This is the system path to the "dota 2 beta" folder. If it is incorrect, please correct it.')
 					)
+				).append(
+					$('<div>').attr({'id':'settingsBodyPatchGameInfo', 'style':'margin-bottom:40px;'}).append(
+						$('<div>').attr({'class':'input-group'}).append(
+							$('<span>').attr({'class':'input-group-addon'+(gameInfoPatched == null?'':(gameInfoPatched?' list-group-item-success':' list-group-item-danger')), 'style':'text-align:left;width:100%;'}).text('Patch GameInfo:')
+						).append(
+							$('<span>').attr({'class':'input-group-btn', 'style':'text-align:right;'}).append(
+								$('<button>').attr({'class':'btn '+(gameInfoPatched==null?'btn-default':(gameInfoPatched?'btn-success':'btn-danger')), 'type':'button'}).prop('disabled', gameInfoPatched == null || gameInfoPatched).text(gameInfoPatched == null?'Loading...':(gameInfoPatched?'Patched':'Patch')).click(function(){
+									wsClientManager.send('patchGameInfo');
+									$(this).prop('disabled', true).text('Patching...');
+								}))
+						)
+					).append(
+						$('<span>').attr('class', 'help-block').text('You must patch gameinfo.txt before being able to play any games on DotaHost.net. Dota MUST be closed when performing this action.')
+					)
 				);
 			}else{
 				$('#settingsBody').text('Please open the ModManager.');
@@ -1222,6 +1270,7 @@ var wsClientLobby;
 			updateSettingsOptions();
 			wsClientManager.send('getAutorun');
 			wsClientManager.send('getDotapath');
+			wsClientManager.send('getPatchGameInfo');
 		}
 
 		function refreshCreateLobbyModal(){
@@ -1298,7 +1347,12 @@ var wsClientLobby;
 				)
 			);
 			$('#createLobbyOptionsCreate').click(function(){
-				console.log('yollo');
+				if(user == null){
+					alert('Please log in.');
+				}
+				if(!gameInfoPatched){
+					alert('Please patch gameinfo.txt (settings).');
+				}
 				var settingsBody = $('#createLobbyBody');
 
 				var lobby = {};
@@ -1380,7 +1434,6 @@ var wsClientLobby;
 				);
 			}
 			wsClientManager.send("getAddonStatus");
-
 		}
 
 	});
