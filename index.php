@@ -48,6 +48,37 @@
 		<title>DotaHost.Net</title>
 	</head>
 	<body>
+		<div id="settings" class="modal fade">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+						<h4 class="modal-title">DotaHost Settings</h4>
+					</div>
+					<div id="settingsBody" class="modal-body">
+						Please open the ModManager.
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div id="createLobbyOptions" class="modal fade">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+						<h4 class="modal-title">Create Lobby</h4>
+					</div>
+					<div id="createLobbyBody" class="modal-body">
+					</div>
+					<div class="modal-footer">
+						<button id="createLobbyOptionsCreate" type="button" class="btn btn-primary">Create</button>
+					</div>
+				</div>
+			</div>
+		</div>
 		<div id="main" class="container-fluid"></div>
 		<iframe id="go" style="display:none"></iframe>
 		<script>
