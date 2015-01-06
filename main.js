@@ -156,7 +156,7 @@ var wsClientLobby;
 		var launchModManagerTimeout = null;
 
 		// Whether we have been verified or not
-		var isVerified =  false;
+		var isVerified = null;
 
 		var spinner = '<div class="spinner"><div class="spinner-container container1"><div class="circle1"></div><div class="circle2"></div><div class="circle3"></div><div class="circle4"></div></div><div class="spinner-container container2"><div class="circle1"></div><div class="circle2"></div><div class="circle3"></div><div class="circle4"></div></div><div class="spinner-container container3"><div class="circle1"></div><div class="circle2"></div><div class="circle3"></div><div class="circle4"></div></div></div>';
 
@@ -387,13 +387,11 @@ var wsClientLobby;
 
 		// Packs arguments
 		function packArguments() {
-			if( typeof someVar === 'string' ) {// Build args array
-				var args = [];
-				for(var i=0; i<arguments.length; i++) args.push(arguments[i]);
+			// Build args array
+			var args = [];
+			for(var i=0; i<arguments.length; i++) args.push(arguments[i]);
 
-				return args.join(MSG_SEP);
-			}
-			return arguments.join(MSG_SEP);
+			return args.join(MSG_SEP);
 		}
 
 		var templates = {
@@ -437,7 +435,7 @@ var wsClientLobby;
 					},
 
 					'connectedToLobbyManager':function(args){
-						if(connectedLobby){
+						if(isVerified){
 							return ''+
 							'<div class="alert alert-success">'+
 								'<h4>LobbyManager</h4><span class="glyphicon glyphicon-ok" style="position:absolute;left:calc(100% - 50px);top:10px;"></span>'+
@@ -716,7 +714,7 @@ var wsClientLobby;
 				wsClientManager.send('getAddonStatus');
 			},
 			'page':function(e, x){
-				if(x[1] == currentPage){
+				if(x[1] == currentPage && currentPage != 'home'){
 					return;
 				}
 				switch(x[1]){
@@ -799,7 +797,7 @@ var wsClientLobby;
 			},
 			'validate':function(e, x){
 				if(x[1] == 'success') {
-					verified = true;
+					isVerified = true;
 					wsClientLobby.send('getPage');
 				} else {
 					refreshHome();
@@ -841,17 +839,15 @@ var wsClientLobby;
 			},
 
 			'connectToServer':function(e, x){
-				if(x[1] === "success"){
-					$('#leaveLobbyReconnect').text('Reconnect').click(function(){
-						location.href = "steam://connect/" + x[2];
-					});
-					location.href = "steam://connect/" + x[2];
-				}
+				$('#leaveLobbyReconnect').text('Reconnect').click(function(){
+					location.href = "steam://connect/" + x[1];
+				});
+				location.href = "steam://connect/" + x[1];
 			},
 
 			'gameServerInfo':function(e, x){
 				if(x[1] === "success"){
-					wsClientManager.send(packArguments(x[0], x[2], currentLobby));
+					wsClientManager.send(packArguments(x[0], x[2], JSON.stringify(currentLobby)));
 				}
 			},
 
@@ -1075,6 +1071,13 @@ var wsClientLobby;
 		function setupClientSocket(){
 			wsClientManager = new WebSocket("ws://127.0.0.1:2074");
 
+			wsClientManager.sendReal = wsClientManager.send;
+			wsClientManager.send = function(string){
+				console.log('Sent:');
+				console.log(string);
+				wsClientManager.sendReal(string);
+			}
+
 			wsClientManager.onopen = function(e){
 				connectedClient = true;
 
@@ -1142,13 +1145,6 @@ var wsClientLobby;
 			}
 
 			wsClientLobby.onopen = function(e){
-
-				$('#dotahostLobbyConnectedDiv').html(
-					'<div class="alert alert-success">'+
-						'<h4>LobbyManager</h4><span class="glyphicon glyphicon-ok" style="position:absolute;left:calc(100% - 50px);top:10px;"></span>'+
-						'<strong>Successfully</strong> verified user profile!'+
-					'</div>'
-				);
 
 				connectedLobby = true;
 
