@@ -414,6 +414,38 @@ var wsClientLobby;
 					// Returns the user's avatar
 					'avatar':function(args) {
 						return user['avatar'];
+					},
+
+					'connectedToModManager':function(args){
+						if(connectedClient){
+							return ''+
+							'<div class="alert alert-success">'+
+								'<h4>ModManager</h4><span class="glyphicon glyphicon-ok" style="position:absolute;left:calc(100% - 50px);top:10px;"></span>'+
+								'<strong>Successfully</strong> connected to ModManager!'+
+							'</div>';
+						}else{
+							return ''+
+							'<div class="alert alert-info">'+
+								'<h4>ModManager!</h4><span style="position:absolute;left:calc(100% - 50px);top:-10px;">'+spinner+'</span>'+
+								'<strong>Attempting</strong> to connect to local ModManager.'+
+							'</div>';
+						}
+					},
+
+					'connectedToLobbyManager':function(args){
+						if(connectedLobby){
+							return ''+
+							'<div class="alert alert-success">'+
+								'<h4>LobbyManager</h4><span class="glyphicon glyphicon-ok" style="position:absolute;left:calc(100% - 50px);top:10px;"></span>'+
+								'<strong>Successfully</strong> verified user profile!'+
+							'</div>';
+						}else{
+							return ''+
+							'<div class="alert alert-info">'+
+								'<h4>LobbyManager!</h4><span style="position:absolute;left:calc(100% - 50px);top:-10px;">'+spinner+'</span>'+
+								'<strong>Attempting</strong> to connect to Dotahost LobbyManager.'+
+							'</div>';
+						}
 					}
 				},
 				// User is not logged in
@@ -457,16 +489,10 @@ var wsClientLobby;
 						'<div class="col-md-9 col-lg-8 col-md-push-3 col-lg-push-2 column">',
 							'<div class="row">',
 								'<div id="localClientConnectedDiv" class="col-md-6 column">',
-									'<div class="alert alert-info">',
-										'<h4>ModManager!</h4><span style="position:absolute;left:calc(100% - 50px);top:-10px;">'+spinner+'</span>',
-										'<strong>Attempting</strong> to connect to local ModManager.',
-									'</div>',
+									'[[connectedToModManager]]',
 								'</div>',
 								'<div id="dotahostLobbyConnectedDiv" class="col-md-6 column">',
-									'<div class="alert alert-info">',
-										'<h4>LobbyManager!</h4><span style="position:absolute;left:calc(100% - 50px);top:-10px;">'+spinner+'</span>',
-										'<strong>Attempting</strong> to connect to Dotahost LobbyManager.',
-									'</div>',
+									'[[connectedToLobbyManager]]',
 								'</div>',
 							'</div>',
 							'<div class="row">',
@@ -474,8 +500,20 @@ var wsClientLobby;
 									'<h3 class="text-left">',
 										'<span style="float:left;">Lobbies</span>{{0}}',
 										function(args){
-											return $('<button>').attr({'type':'button', 'style':'float:right;', 'class':'btn btn-primary btn-default'}).text('Create Lobby').click(function(){
-												selectPage('createLobby');
+											return $('<button>').attr({'type':'button', 'style':'float:right;margin-left:5px;', 'class':'btn btn-primary', 'data-toggle':'modal', 'data-target':'#createLobbyOptions'}).text('Create Lobby').click(function(){
+												refreshCreateLobbyModal();
+											});
+										},
+										'{{1}}',
+										function(args){
+											return $('<button>').attr({'type':'button', 'style':'float:right;margin-left:5px;', 'class':'btn btn-info', 'data-toggle':'modal', 'data-target':'#settings'}).text('Settings').click(function(){
+												openSettingsModal();
+											});
+										},
+										'{{2}}',
+										function(args){
+											return $('<button>').attr({'type':'button', 'style':'float:right;', 'class':'btn btn-primary btn-warning'}).text('Logout').click(function(){
+												location.href = 'logout.php';
 											});
 										},
 									'</h3>',
@@ -497,64 +535,6 @@ var wsClientLobby;
 				]
 			]),
 
-
-
-			// Create lobby page []
-			'createLobby': new Template ([
-				'<div class="row clearfix">',
-					'<div class="col-md-3 column">',
-					'</div>',
-					'<div class="col-md-6 column">',
-						'<h1>Create a lobby</h1>',
-						'<h2>Settings</h2>',
-						'<p>No settings for shoe!</p>',
-						'Lobby name: <input id="inputLobbyName" text="text">',
-						'<p>Click {{0}} to create a lobby!</p>',
-						function(args) {
-							return $('<a>').attr('href', '#').text('here').click(function() {
-
-								var lobby = {};
-								var addon = {};
-								addon[ADDON_ID] = "lod";
-								addon[ADDON_OPTIONS] = {"pickingStyle":"All Pick"};
-
-								var addons = {"0":addon};
-
-								var team1 = {};
-								team1[TEAM_NAME] = "Radiant";
-								team1[TEAM_MAX_PLAYERS] = "5";
-								team1[TEAM_PLAYERS] = {};
-
-								var team2 = {};
-								team2[TEAM_NAME] = "Dire";
-								team2[TEAM_MAX_PLAYERS] = "5";
-								team2[TEAM_PLAYERS] = {};
-
-
-								var teams = {"0":team1,"1":team2};
-
-								lobby[LOBBY_NAME] = $("#inputLobbyName").val() || user['personaname'] + "'s Lobby";
-								lobby[LOBBY_CURRENT_PLAYERS] = "0";
-								lobby[LOBBY_MAX_PLAYERS] = "2";
-								lobby[LOBBY_REGION] = REGION_TO_ID["Australia"];
-								lobby[LOBBY_TEAMS] = teams;
-								lobby[LOBBY_ADDONS] = addons;
-
-								args = JSON.stringify(lobby);
-
-
-								var msg = packArguments('createLobby', args);
-
-								console.log('Sending message: '+msg);
-								wsClientLobby.send(msg);
-							});
-						},
-					'</div>',
-					'<div class="col-md-3 column">',
-					'</div>',
-				'</div>'				
-			]),
-
 			'lobby-lod': new Template ([
 				{
 					'lobbyName':function(args){
@@ -572,8 +552,8 @@ var wsClientLobby;
 					}
 				},
 				'<div class="row clearfix">',
-					'<div class="col-lg-2 col-md-1 col-sm-0 column"></div>',
-					'<div class="col-lg-8 col-md-10 col-sm-12 column">',
+					'<div class="col-xl-2 col-lg-0 col-md-0 col-sm-0 column"></div>',
+					'<div class="col-xl-8 col-lg-12 col-md-12 col-sm-12 column">',
 						'<div class="row clearfix">',
 							'<div class="col-md-6 col-sm-6 column">',
 								'<h1>[[lobbyName]]</h1>',
@@ -583,7 +563,7 @@ var wsClientLobby;
 							'</div>',
 						'</div>',
 					'</div>',
-					'<div class="col-lg-2 col-md-1 col-sm-0 column"></div>',
+					'<div class="col-xl-2 col-lg-0 col-md-0 col-sm-0 column"></div>',
 				'</div>',
 				'<div class="row clearfix">',
 					'<div class="col-lg-0 col-md-0 col-sm-0 column col-xl-2"></div>',
@@ -596,8 +576,10 @@ var wsClientLobby;
 							var players = team[TEAM_PLAYERS];
 
 							var listGroup = $('<div>').attr({'id':'teamList'+teamID, 'class':'list-group'})
-								.append($('<a>').attr({'href':'#', 'class':'list-group-item disabled'})
-									.html('<h4>'+team[TEAM_NAME]+'</h4>')
+								.append($('<a>').attr({'style':'cursor:default;', 'class':'list-group-item disabled'})
+									.html('<h4>'+team[TEAM_NAME]+'</h4>').click(function(e){
+										e.preventDefault();
+									})
 								);
 							for(var i = 0; i < 5; ++i){
 								addPlayerToTeamList(listGroup, players, team, teamID, ''+i, true);
@@ -614,8 +596,10 @@ var wsClientLobby;
 							var players = team[TEAM_PLAYERS];
 
 							var listGroup = $('<div>').attr({'id':'teamList'+teamID, 'class':'list-group', 'style':'text-align:right;'})
-								.append($('<a>').attr({'href':'#', 'class':'list-group-item disabled'})
-									.html('<h4>'+team[TEAM_NAME]+'</h4>')
+								.append($('<a>').attr({'style':'cursor:default;', 'class':'list-group-item disabled'})
+									.html('<h4>'+team[TEAM_NAME]+'</h4>').click(function(e){
+										e.preventDefault();
+									})
 								);
 							for(var i = 0; i < 5; ++i){
 								addPlayerToTeamList(listGroup, players, team, teamID, ''+i, false);
@@ -658,6 +642,12 @@ var wsClientLobby;
 						'</div>',
 					'</div>',
 					'<div class="col-lg-4 col-md-4 col-sm-4 column col-xl-2">',
+						'{{5}}',
+						function(args){
+							return $('<button>').attr({'id':'leaveLobbyReconnect', 'class':'btn btn-default btn-lg', 'style':'width:100%;margin-bottom:20px;'}).text('Leave Lobby').click(function(){
+								wsClientLobby.send('leaveLobby');
+							});
+						},
 						'{{1}}',
 						function(args){
 							var teamID = '2';
@@ -665,9 +655,11 @@ var wsClientLobby;
 							var team = teams[teamID];
 							var players = team[TEAM_PLAYERS];
 
-							var listGroup = $('<div>').attr({'id':'teamList'+teamID, 'class':'list-group', 'style':'text-align:center;'})
-								.append($('<a>').attr({'class':'list-group-item disabled'})
-									.html('<h4>'+team[TEAM_NAME]+'</h4>')
+							var listGroup = $('<div>').attr({'id':'teamList'+teamID, 'class':'list-group', 'style':'text-align:right;'})
+								.append($('<a>').attr({'style':'cursor:default;', 'class':'list-group-item disabled'})
+									.html('<h4>'+team[TEAM_NAME]+'</h4>').click(function(e){
+										e.preventDefault();
+									})
 								);
 							for(var playerKey in players){
 								addPlayerToTeamList(listGroup, players, team, teamID, playerKey, true);
@@ -697,9 +689,6 @@ var wsClientLobby;
 			'id':function(e, x){
 				wsID = x[1];
 			},
-			'dotaPath':function(e, x){
-				dotaPath = x[1];
-			},
 			'startInstall':function(e, x){
 				$('#app').html('<div class="progress"><div id="progress" class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width:0%"></div></div>');
 			},
@@ -728,8 +717,7 @@ var wsClientLobby;
 				}
 				switch(x[1]){
 					case 'home':
-						selectPage(x[1], [user != null]);
-						setTimeout(function(){populateLobbies(x[2]);}, 100);
+						refreshHome();
 						break;
 					case 'lobby':
 						currentLobby = JSON.parse(x[2]);
@@ -738,7 +726,11 @@ var wsClientLobby;
 				}
 			},
 			'getLobbies':function(e, x){
-				populateLobbies(x[1]);
+				lobbies = JSON.parse(x[1]);
+				populateLobbies();
+			},
+			'leaveLobby':function(e, x){
+				refreshHome();
 			},
 			'chat':function(e, x){
 				var personaname;
@@ -806,7 +798,7 @@ var wsClientLobby;
 					verified = true;
 					wsClientLobby.send('getPage');
 				} else {
-					selectPage('home', [user != null]);
+					refreshHome();
 				}
 			},
 			'addonStatus':function(e, x){
@@ -846,8 +838,31 @@ var wsClientLobby;
 
 			'gameServerInfo':function(e, x){
 				if(x[1] === "success"){
+					$('#leaveLobbyReconnect').text('Reconnect').click(function(){
+						location.href = "steam://connect/" + x[2];
+					});
 					location.href = "steam://connect/" + x[2];
 				}
+			},
+
+			'autorun':function(e, x){
+				updateAutorunOption(x[1]=='1');
+			},
+			'dotaPath':function(e, x){
+				dotaPath = x[1];
+				updateDotaPathOption();
+			},
+			'lobbyFull':function(e, x){
+				var k = function(j){
+					if(j == 5){
+						console.log('starting game...');
+					}
+					console.log(j);
+					if(j != 0){
+						setTimeout((function(a){return function(){a(j-1)}})(k), 1000);
+					}
+				}
+				k(5);
 			}
 		}
 		var timeoutPrevention;
@@ -905,84 +920,83 @@ var wsClientLobby;
 			listGroup.append(container);
 		}
 
-		function populateLobbies(lobbiesStr){
+		function populateLobbies(){
 			lobbiesChangedTimeout = true;
-				setTimeout(function(){lobbiesChangedTimeout = false;}, 500);
-				lobbies = JSON.parse(lobbiesStr);
-				var lobbiesTable = $('<table>').attr('class', 'table table-hover').append(
-					$('<thead>').append(
-						$('<tr>').append(
-							$('<th>').text('Lobby Name')
-						).append(
-							$('<th>').text('Addons')
-						).append(
-							$('<th>').text('Options')
-						).append(
-							$('<th>').text('Players')
-						)
+			setTimeout(function(){lobbiesChangedTimeout = false;}, 500);
+			var lobbiesTable = $('<table>').attr('class', 'table table-hover').append(
+				$('<thead>').append(
+					$('<tr>').append(
+						$('<th>').text('Lobby Name')
+					).append(
+						$('<th>').text('Addons')
+					).append(
+						$('<th>').text('Options')
+					).append(
+						$('<th>').text('Players')
 					)
-				);
-				var tbody = $('<tbody>');
-				for(var lobbyKey in lobbies){
-					if(!lobbies.hasOwnProperty(lobbyKey)){continue;};
-					var lobby = lobbies[lobbyKey];
-					var lobbyName = lobby[LOBBY_NAME];
-					var tr = $('<tr>').attr('style', 'cursor:pointer;');
-					tr.append($('<td>').text(lobbyName));
-					var addonsStr = '';
-					var optionsStr = '';
-					for(var addonKey in lobby[LOBBY_ADDONS]){
-						if(!lobby[LOBBY_ADDONS].hasOwnProperty(addonKey)){continue;};
-						var addon = lobby[LOBBY_ADDONS][addonKey];
-						addonsStr += addon[ADDON_ID] + ', ';
-						for(var optionKey in addon[ADDON_OPTIONS]){
-							optionsStr += addon[ADDON_ID] + ': ' + optionKey + '=' + addon[ADDON_OPTIONS][optionKey] + ', ';
-						}
+				)
+			);
+			var tbody = $('<tbody>');
+			for(var lobbyKey in lobbies){
+				if(!lobbies.hasOwnProperty(lobbyKey)){continue;};
+				var lobby = lobbies[lobbyKey];
+				var lobbyName = lobby[LOBBY_NAME];
+				var tr = $('<tr>').attr('style', 'cursor:pointer;');
+				tr.append($('<td>').text(lobbyName));
+				var addonsStr = '';
+				var optionsStr = '';
+				for(var addonKey in lobby[LOBBY_ADDONS]){
+					if(!lobby[LOBBY_ADDONS].hasOwnProperty(addonKey)){continue;};
+					var addon = lobby[LOBBY_ADDONS][addonKey];
+					addonsStr += addon[ADDON_ID] + ', ';
+					for(var optionKey in addon[ADDON_OPTIONS]){
+						optionsStr += addon[ADDON_ID] + ': ' + optionKey + '=' + addon[ADDON_OPTIONS][optionKey] + ', ';
 					}
-					if(addonsStr != ''){
-						addonsStr = addonsStr.substring(0, addonsStr.length - 2);
-					}
-					if(optionsStr != ''){
-						optionsStr = optionsStr.substring(0, optionsStr.length - 2);
-					}
-					tr.append($('<td>').text(addonsStr));
-					tr.append($('<td>').text(optionsStr));
-					tr.append($('<td>').text(lobby[LOBBY_CURRENT_PLAYERS] + '/' + lobby[LOBBY_MAX_PLAYERS]));
-					tr.click(function(){
-						if(lobbiesChangedTimeout){
-							return;
-						}
-						var addons = lobbies[lobbyName][LOBBY_ADDONS];
-						for(var addonKey in addons){
-							if(!addons.hasOwnProperty(addonKey)){continue;};
-							var addon = addons[addonKey];
-							switch(installedAddons[addon[ADDON_ID]]){
-								case ADDON_STATUS_ERROR:
-									alert('An unknown error has occured.');
-									break;
-								case ADDON_STATUS_MISSING:
-									alert('Please install the addon.');
-									break;
-								case ADDON_STATUS_UPDATE:
-									alert('Please update the addon.');
-									break;
-								case ADDON_STATUS_READY:
-									wsClientLobby.send(packArguments('joinLobby', $(this).parent().find('td').first().text()));
-									break;
-								default:
-									if(connectedClient){
-										alert('Please install the addon.');
-									}else{
-										alert('Please run the manager.');
-									}
-									break;
-							}
-						}
-					});
-					tbody.append(tr);
 				}
-				lobbiesTable.append(tbody);
-				$('#homeLobbiesTable').html(lobbiesTable);
+				if(addonsStr != ''){
+					addonsStr = addonsStr.substring(0, addonsStr.length - 2);
+				}
+				if(optionsStr != ''){
+					optionsStr = optionsStr.substring(0, optionsStr.length - 2);
+				}
+				tr.append($('<td>').text(addonsStr));
+				tr.append($('<td>').text(optionsStr));
+				tr.append($('<td>').text(lobby[LOBBY_CURRENT_PLAYERS] + '/' + lobby[LOBBY_MAX_PLAYERS]));
+				tr.click(function(){
+					if(lobbiesChangedTimeout){
+						return;
+					}
+					var addons = lobbies[lobbyName][LOBBY_ADDONS];
+					for(var addonKey in addons){
+						if(!addons.hasOwnProperty(addonKey)){continue;};
+						var addon = addons[addonKey];
+						switch(installedAddons[addon[ADDON_ID]]){
+							case ADDON_STATUS_ERROR:
+								alert('An unknown error has occured.');
+								break;
+							case ADDON_STATUS_MISSING:
+								alert('Please install the addon.');
+								break;
+							case ADDON_STATUS_UPDATE:
+								alert('Please update the addon.');
+								break;
+							case ADDON_STATUS_READY:
+								wsClientLobby.send(packArguments('joinLobby', $(this).parent().find('td').first().text()));
+								break;
+							default:
+								if(connectedClient){
+									alert('Please install the addon.');
+								}else{
+									alert('Please run the manager.');
+								}
+								break;
+						}
+					}
+				});
+				tbody.append(tr);
+			}
+			lobbiesTable.append(tbody);
+			$('#homeLobbiesTable').html(lobbiesTable);
 		}
 
 		function setTeamListElementToPlayer(element, player, avatarLeft, deleteSlot){
@@ -1040,6 +1054,7 @@ var wsClientLobby;
 			wsClientManager = new WebSocket("ws://127.0.0.1:2074");
 
 			wsClientManager.onopen = function(e){
+				connectedClient = true;
 
 				clearTimeout(launchModManagerTimeout);
 
@@ -1058,21 +1073,20 @@ var wsClientLobby;
 						'<h4>Legends of Dota <span style="float:right;margin-top:-20px;margin-right:-4px;">'+spinner+'</span></h4>'+
 					'</div>'
 				);
-				connectedClient = true;
+
+				updateSettingsOptions();
 			};
 
 			wsClientManager.onclose = function(e){
 				if(connectedClient){
-					$('#localClientConnectedDiv').html(
-						'<div class="alert alert-danger">'+
-							'<h4>ModManager</h4><span class="glyphicon glyphicon-remove" style="position:absolute;left:calc(100% - 50px);top:10px;"></span>'+
-							'<strong>Lost connection</strong> to ModManager!'+
-						'</div>'
-					);
-					$('#addonStatusContainer').html('');
 					setTimeout(setupClientSocket, 250);
+					connectedClient = false;
+					launchModManagerTimeout = null;
+					refreshHome()
 				}
-				connectedClient = false;
+
+
+				updateSettingsOptions();
 				clearInterval(timeoutPrevention);
 			};
 			var onMessage = function(e){
@@ -1097,6 +1111,13 @@ var wsClientLobby;
 		function setupWebLobbySocket(){
 			wsClientLobby = new WebSocket("ws://dotahost.net:2075");
 
+			wsClientLobby.sendReal = wsClientLobby.send;
+			wsClientLobby.send = function(string){
+				console.log('Sent:');
+				console.log(string);
+				wsClientLobby.sendReal(string);
+			}
+
 			wsClientLobby.onopen = function(e){
 
 				$('#dotahostLobbyConnectedDiv').html(
@@ -1105,6 +1126,7 @@ var wsClientLobby;
 						'<strong>Successfully</strong> verified user profile!'+
 					'</div>'
 				);
+
 				connectedLobby = true;
 
 				if(user != null){
@@ -1141,6 +1163,7 @@ var wsClientLobby;
 			};
 
 			var onMessage = function(e){
+				console.log('Received:');
 				console.log(e.data);
 				var args = e.data.split(MSG_SEP);
 
@@ -1158,7 +1181,211 @@ var wsClientLobby;
 			setTimeout(setupWebLobbySocket, 1000);
 		}
 
+		function updateSettingsOptions(){
+			if(connectedClient){
+				$('#settingsBody').html('').append(
+					$('<div>').attr({'id':'settingsBodyAutorun', 'style':'margin-bottom:40px;'}).append(
+						$('<div>').attr({'class':'input-group'}).append(
+							$('<span>').attr({'class':'input-group-addon', 'style':'text-align:left;height:68px;'}).text('Autorun DotaHost ModManager:')
+						).append(
+							$('<span>').attr({'class':'input-group-addon', 'style':'text-align:right;height:68px;'}).html(spinner)
+						)
+					).append(
+						$('<span>').attr('class', 'help-block').text('If this is selected, the ModManager will automatically launch when you visit this website. This requires administrator privillages on the computer you are using.')
+					)
+				).append(
+					$('<div>').attr('id', 'settingsBodyDotaPath').append(
+						$('<div>').attr({'class':'input-group'}).append(
+							$('<span>').attr({'class':'input-group-addon', 'style':'text-align:left;'}).text('Dota Path:')
+						).append(
+							$('<input>').attr({'type':'text', 'class':'form-control', 'placeholder':'Loading...'}).prop('disabled', 'disabled')
+						).append(
+							$('<span>').attr({'class':'input-group-btn', 'style':'text-align:right;'}).append(
+								$('<button>').attr({'class':'btn btn-default', 'type':'button'}).text('Save').click(function(){
+									var input = $(this).parent().parent().children(':eq(1)');
+									wsClientManager.send(packArguments('setDotaPath', input.val()));
+									$(this).prop('disabled', 'disabled').text('Saving...');
+									input.prop('disabled', 'disabled');
+								})
+							)
+						)
+					).append(
+						$('<span>').attr('class', 'help-block').text('This is the system path to the "dota 2 beta" folder. If it is incorrect, please correct it.')
+					)
+				);
+			}else{
+				$('#settingsBody').text('Please open the ModManager.');
+			}
+		}
+
+		function openSettingsModal(){
+			updateSettingsOptions();
+			wsClientManager.send('getAutorun');
+			wsClientManager.send('getDotapath');
+		}
+
+		function refreshCreateLobbyModal(){
+			var inputGroup = function(name, content){
+				return '<div style="margin-bottom:10px;height:34px;width:100%;" class="input-group"><span style="text-align:left;width:150px;" class="input-group-addon">'+name+':</span>'+content+'</div>';
+			}
+			var checkbox = function(id, checked){
+				return '<span class="input-group-addon" style="text-align:right;"><input id="'+id+'" type="checkbox"'+(checked?' checked="checked"':'')+'></span>';
+			}
+			var options = function(args, defaultIndex){
+				ret = '';
+				for(i = 0; i < args.length; ++i){
+					ret += '<option value="'+args[i][0]+'"'+(defaultIndex==i?' selected="selected"':'')+'>'+args[i][1]+'</option>';
+				}
+				return ret;
+			}
+			var selectProperties = function(id, str){
+				return '<select id="'+id+'" dir="rtl" style="text-align:right;" class="form-control">'+str+'</select>';
+			};
+			$('#createLobbyBody').html(
+				inputGroup('Game Mode',
+					selectProperties('mode',
+						options([
+							['ap', 'All Pick'],
+							['sd', 'Single Draft'],
+							['md', 'Mirror Draft'],
+							['ar', 'All Random']
+						])
+					)
+				)+
+				inputGroup('Max Total Skills',
+					selectProperties('totalSkills',
+						options([[1, 1], [2, 2], [3, 3], [4, 4], [5, 5], [6, 6]], 5)
+					)
+				)+
+				inputGroup('Max Regular Skills',
+					selectProperties('regularSkills',
+						options([[1, 1], [2, 2], [3, 3], [4, 4], [5, 5], [6, 6]], 3)
+					)
+				)+
+				inputGroup('Max Ultimate Skills',
+					selectProperties('ultimateSkills',
+						options([[1, 1], [2, 2], [3, 3], [4, 4], [5, 5], [6, 6]], 1)
+					)
+				)+
+				inputGroup('Bans',
+					selectProperties('bans',
+						options([[0, 0], [1, 1], [3, 3], [5, 5], [10, 10], [15, 15], [20, 20], ['host', 'HostBans']], 4)
+					)
+				)+
+				inputGroup('Easy Mode',
+					checkbox('em')
+				)+
+				inputGroup('Troll Mode',
+					checkbox('tm')
+				)+
+				inputGroup('Hide Picks',
+					checkbox('hidePicks', true)
+				)+
+				inputGroup('Starting Level',
+					selectProperties('level',
+						options([[1, 1], [6, 6], [11, 11], [16, 16], [25, 25]])
+					)
+				)+
+				inputGroup('Bonus Starting Gold',
+					selectProperties('gold',
+						(function(){var ret;for(var i = 0; i < 100001; i=(i==1000||i==10000?(i*2.5):(i==0?250:i*2))){ret+=options([[i, i]])}return ret;})()
+					)
+				)+
+				inputGroup('Unique Skills',
+					selectProperties('unique',
+						options([[0, 'None'], [1, 'Team'], [2, 'All']])
+					)
+				)
+			);
+			$('#createLobbyOptionsCreate').click(function(){
+				console.log('yollo');
+				var settingsBody = $('#createLobbyBody');
+
+				var lobby = {};
+				var addon = {};
+				addon[ADDON_ID] = "lod";
+				addon[ADDON_OPTIONS] = {};
+				settingsBody.find('select, input').each(function(){
+					var e = $(this);
+					addon[ADDON_OPTIONS][e.attr('id')] = e.val() == 'on' ? ''+(~~e.is(':checked')) : e.val();
+				});
+
+				var addons = {"0":addon};
+
+				var team1 = {};
+				team1[TEAM_NAME] = "Radiant";
+				team1[TEAM_MAX_PLAYERS] = "5";
+				team1[TEAM_PLAYERS] = {};
+
+				var team2 = {};
+				team2[TEAM_NAME] = "Dire";
+				team2[TEAM_MAX_PLAYERS] = "5";
+				team2[TEAM_PLAYERS] = {};
+
+
+				var teams = {"0":team1,"1":team2};
+
+				lobby[LOBBY_NAME] = user['personaname'] + "'s Lobby";
+				lobby[LOBBY_CURRENT_PLAYERS] = "0";
+				lobby[LOBBY_MAX_PLAYERS] = "2";
+				lobby[LOBBY_REGION] = REGION_TO_ID["America"];
+				lobby[LOBBY_TEAMS] = teams;
+				lobby[LOBBY_ADDONS] = addons;
+
+				args = JSON.stringify(lobby);
+
+				var msg = packArguments('createLobby', args);
+				wsClientLobby.send(msg);
+
+				$('#createLobbyOptions').modal('toggle');
+			})
+		}
+
+		function updateAutorunOption(autorun){
+			$('#settingsBodyAutorun').children(':first').children(':eq(1)').html('').append(
+				$('<input>').attr('type', 'checkbox').prop('checked', autorun).click(function(e){
+					if(this.checked){
+						wsClientManager.send('autorun');
+					}else{
+						wsClientManager.send('uninstall');
+					}
+					$(this).parent().html(spinner);
+				})
+			);
+		}
+
+		function updateDotaPathOption(){
+			var group = $('#settingsBodyDotaPath').children(':first');
+			group.children(':eq(1)').removeAttr('disabled').val(dotaPath);
+			group.children(':eq(2)').html('').append(
+				$('<button>').attr({'class':'btn btn-default', 'type':'button'}).text('Save').click(function(){
+					var input = group.children(':eq(1)');
+					wsClientManager.send(packArguments('setDotaPath', input.val()));
+					$(this).prop('disabled', 'disabled').text('Saving...');
+					input.prop('disabled', 'disabled');
+				})
+			);
+		}
+
+		function refreshHome(){
+			selectPage('home', [user != null]);
+			if(lobbies){
+				populateLobbies();
+			}
+			if(connectedClient){
+				$('#addonStatusContainer').append(
+					'<div id="lodStatus" class="bs-callout bs-callout-info col-sm-4 col-md-12" style="cursor:default;">'+
+						'<h4>Legends of Dota <span style="float:right;margin-top:-20px;margin-right:-4px;">'+spinner+'</span></h4>'+
+					'</div>'
+				);
+			}
+			wsClientManager.send("getAddonStatus");
+
+		}
+
 	});
+
+	
 
 	function loadAppByUri(appUri) {
 
@@ -1179,11 +1406,21 @@ var wsClientLobby;
 			}
 			waiting = false;
 			clearEvents();
-			$('#localClientConnectedDiv').html(
-				'<div class="alert alert-danger">'+
-					'<h4>ModManager</h4><span class="glyphicon glyphicon-remove" style="position:absolute;left:calc(100% - 50px);top:10px;"></span>'+
-					'<strong>Failed</strong> to connect to ModManager (<a href="dotahost://">run</a>)'+
-				'</div>'
+			$('#localClientConnectedDiv').html('').append(
+				$('<div>').attr('class', 'alert alert-danger').append(
+					$('<h4>').text('ModManager')
+				).append(
+					$('<span>').attr({'class':'glyphicon glyphicon-remove', 'style':'position:absolute;left:calc(100% - 50px);top:10px;'})
+				).append(
+					$('<strong>').text('Failed')
+				).append(
+					' to connect to ModManager ('
+				).append(
+					$('<a>').attr('href', '#').text('run').click(function(e){
+						e.preventDefault();
+						loadAppByUri("dotahost://");
+					})
+				).append(')')
 			);
 			$('#addonStatusContainer').html('');
 		}
