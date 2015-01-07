@@ -1039,7 +1039,7 @@ var wsClientLobby;
 				return;
 			}
 			element.attr('class', 'list-group-item'+(COSMETICS[''+player[PLAYER_COSMETICS]]));
-			element.attr('href', player[PLAYER_PROFILEURL]);
+			element.attr({'href':player[PLAYER_PROFILEURL], 'target':(player?'_blank':'_self')});
 			element.find('span.name').text(player[PLAYER_PERSONANAME]);
 			var badgesSpan = element.find('span.badges').first().html('');
 			var badgesNum = parseInt(player[PLAYER_BADGES]);
@@ -1286,58 +1286,70 @@ var wsClientLobby;
 			var selectProperties = function(id, str){
 				return '<select id="'+id+'" dir="rtl" style="text-align:right;" class="form-control">'+str+'</select>';
 			};
+			var GAME_MODE = '0';
+			var MAX_SLOTS = '1';
+			var MAX_REGULAR = '2';
+			var MAX_ULTIMATE = '3';
+			var BANS = '4';
+			var EASY_MODE = '5';
+			var TROLL_MODE = '6';
+			var HIDE_PICKS = '7';
+			var STARTING_LEVEL = '8';
+			var BONUS_GOLD = '9';
+			var UNIQUE_SKILLS = 'a';
+
 			$('#createLobbyBody').html(
 				inputGroup('Game Mode',
-					selectProperties('mode',
+					selectProperties(GAME_MODE,
 						options([
-							['ap', 'All Pick'],
-							['sd', 'Single Draft'],
-							['md', 'Mirror Draft'],
-							['ar', 'All Random']
+							['0', 'All Pick'],
+							['1', 'Single Draft'],
+							['2', 'Mirror Draft'],
+							['3', 'All Random']
 						])
 					)
 				)+
 				inputGroup('Max Total Skills',
-					selectProperties('totalSkills',
+					selectProperties(MAX_SKILLS,
 						options([[1, 1], [2, 2], [3, 3], [4, 4], [5, 5], [6, 6]], 5)
 					)
 				)+
 				inputGroup('Max Regular Skills',
-					selectProperties('regularSkills',
+					selectProperties(MAX_REGULAR,
 						options([[1, 1], [2, 2], [3, 3], [4, 4], [5, 5], [6, 6]], 3)
 					)
 				)+
 				inputGroup('Max Ultimate Skills',
-					selectProperties('ultimateSkills',
+					selectProperties(MAX_ULTIMATE,
 						options([[1, 1], [2, 2], [3, 3], [4, 4], [5, 5], [6, 6]], 1)
 					)
 				)+
 				inputGroup('Bans',
-					selectProperties('bans',
-						options([[0, 0], [1, 1], [3, 3], [5, 5], [10, 10], [15, 15], [20, 20], ['host', 'HostBans']], 4)
+					selectProperties(BANS,
+						options([[0, 0], [1, 1], [3, 3], [5, 5], [10, 10], [15, 15], [20, 20], ['h', 'HostBans']], 4)
 					)
 				)+
 				inputGroup('Easy Mode',
-					checkbox('em')
+					checkbox(EASY_MODE)
 				)+
 				inputGroup('Troll Mode',
-					checkbox('tm')
+					checkbox(TROLL_MODE)
 				)+
 				inputGroup('Hide Picks',
-					checkbox('hidePicks', true)
+					checkbox(HIDE_PICKS, true)
 				)+
 				inputGroup('Starting Level',
-					selectProperties('level',
+					selectProperties(STARTING_LEVEL,
 						options([[1, 1], [6, 6], [11, 11], [16, 16], [25, 25]])
 					)
 				)+
 				inputGroup('Bonus Starting Gold',
-					selectProperties('gold',
+					selectProperties(BONUS_GOLD,
 						(function(){var ret;for(var i = 0; i < 100001; i=(i==1000||i==10000?(i*2.5):(i==0?250:i*2))){ret+=options([[i, i]])}return ret;})()
 					)
 				)+
 				inputGroup('Unique Skills',
-					selectProperties('unique',
+					selectProperties(UNIQUE_SKILLS,
 						options([[0, 'None'], [1, 'Team'], [2, 'All']])
 					)
 				)
