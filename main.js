@@ -1139,8 +1139,10 @@ var wsClientLobby;
 
 			wsClientLobby.sendReal = wsClientLobby.send;
 			wsClientLobby.send = function(string){
-				console.log('Sent:');
-				console.log(string);
+				if(string != 'time'){
+					console.log('Sent:');
+					console.log(string);
+				}
 				wsClientLobby.sendReal(string);
 			}
 
@@ -1286,6 +1288,7 @@ var wsClientLobby;
 			var selectProperties = function(id, str){
 				return '<select id="'+id+'" dir="rtl" style="text-align:right;" class="form-control">'+str+'</select>';
 			};
+
 			var GAME_MODE = '0';
 			var MAX_SLOTS = '1';
 			var MAX_REGULAR = '2';
@@ -1310,7 +1313,7 @@ var wsClientLobby;
 					)
 				)+
 				inputGroup('Max Total Skills',
-					selectProperties(MAX_SKILLS,
+					selectProperties(MAX_SLOTS,
 						options([[1, 1], [2, 2], [3, 3], [4, 4], [5, 5], [6, 6]], 5)
 					)
 				)+
