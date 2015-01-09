@@ -1,9 +1,45 @@
 <?php
 
+
 	$data_str = file_get_contents("php://input");
 	$data_obj = json_decode($data_str);
 
-	if($data_obj){
+	if(array_key_exists('ref', $data_obj)){
+
+			echo('1');
+
+			$after = $data_obj->after;
+			$last_commit = $after;
+			$url = 'https://api.github.com/repos/Jexah/DotaHostServerInit/zipball/master';
+
+			set_time_limit(0);
+
+			$out = fopen('..\\files\\serverinit.zip', 'wb'); 
+
+			$ch = curl_init();
+			$headers = array(
+				'User-Agent: Jexah',
+				'Authorization: token e4b888da209e6402a10a7ec111720af650f4b0bd'
+			);
+			curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+			curl_setopt($ch, CURLOPT_URL, $url);
+			curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+			curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+			curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+	    	curl_setopt($ch, CURLOPT_FILE, $out); 
+
+			curl_exec($ch);
+
+			curl_close($ch);
+
+			fclose($out);
+
+			$hash = hash_file('crc32b', '..\\files\\serverinit.zip');
+
+			file_put_contents('..\\addons\\serverinit.txt', $hash."\n".$last_commit);
+	}else{
+
+		echo('2');
 		
 		$release = $data_obj->release;
 		$tag_name = $release->tag_name;
