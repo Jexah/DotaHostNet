@@ -540,8 +540,20 @@ var wsClientLobby;
 
 					// User is white NOT listed
 					[function(args) {return !user || !user.whitelisted;},
-						'<h1>Rats!</h1>',
-						'<p>You\'re not a beta participant :(</p>'
+						'<div class="row">',
+							'<div class="col-md-3 column">',
+							'</div>',
+							'<div class="col-md-6 column">',
+								'<h1>Rats!</h1>',
+								'<p>You\'re not a beta participant :(</p>',
+								'{{1}}',
+								function(args){
+									return $('<button>').attr({'type':'button', 'style':'float:right;', 'class':'btn btn-primary btn-warning'}).text('Logout').click(function(){
+										location.href = 'logout.php';
+									});
+								},
+							'</div>',
+						'</div>'
 					]
 				]
 			]),
