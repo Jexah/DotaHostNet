@@ -33,8 +33,14 @@
 	# You would uncomment the line beneath to make it refresh the data every time the page is loaded
 	//$_SESSION['steam_uptodate'] = false;
 	steamLogin();
+
+	// Grab the manager version info
+	$managerVersion = 'UNKNOWN VERSION';
+	if(file_exists('version.txt')) {
+		$managerVersion = file_get_contents('version.txt');
+	}
 ?>
-	var managerVersion = "<?php echo(file_get_contents('version.txt')); ?>";
+	var managerVersion = "<?php echo($managerVersion); ?>";
 </script>
 
 <!DOCTYPE html>
