@@ -34,9 +34,9 @@
 
             // Check if the user is white listed
             if($whitelisted) {
-                echo '{"0":"'.$steamID.'","1":"'.addslashes($row[1]).'","2":'.$row[0].'","3":'.$row[2].'","4":'.$row[3].'"}';
+                echo '{"0":"'.$steamID.'","1":"'.addslashes($row[1]).'","2":"'.$row[0].'","3":"'.$row[2].'","4":"'.$row[3].'"}';
             } else {
-                echo failString;
+                echo $failString;
             }
         } else {
             echo $failString;
