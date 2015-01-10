@@ -28,7 +28,10 @@
 
         // Check if we found any
         if($row) {
-?>{"0":"<?PHP echo $steamID; ?>","1":"<?PHP echo addslashes($row[1]); ?>","2":"<?PHP echo $row[0]; ?>","3":"<?PHP echo $row[2]; ?>","4":"<?PHP echo $row[3]; ?>","5":"<?PHP echo $row[4]; ?>"}<?PHP
+            // Grab the whitelist
+            $whitelist = json_decode(file_get_contents('beta/whitelist.json') || '{}');
+
+?>{"0":"<?PHP echo $steamID; ?>","1":"<?PHP echo addslashes($row[1]); ?>","2":"<?PHP echo $row[0]; ?>","3":"<?PHP echo $row[2]; ?>","4":"<?PHP echo $row[3]; ?>","5":"<?PHP echo $row[4]; ?>","6":"<?PHP echo(property_exists($whitelist, $steamprofile['steamid32']) ? '1' : '0') ?>"}<?PHP
         } else {
             echo $failString;
             return;
