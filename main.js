@@ -484,56 +484,65 @@ var wsClientLobby;
 				],
 				// User is logged in
 				[function(args) {return args[0];},
-					'<span class="glyphicon glyphicon-remove" style="visibility:hidden;"></span>',
-					'<span class="glyphicon glyphicon-ok" style="visibility:hidden;"></span>',
-					'<span class="glyphicon glyphicon-download-alt" style="visibility:hidden;"></span>',
-					'<div class="row" style="margin-top:100px;">',
-						'<div class="col-md-9 col-lg-8 col-md-push-3 col-lg-push-2 column">',
-							'<div class="row">',
-								'<div id="localClientConnectedDiv" class="col-md-6 column">',
-									'[[connectedToModManager]]',
+					// User is white listed
+					[function(args) {return user && user.whitelisted;},
+						'<span class="glyphicon glyphicon-remove" style="visibility:hidden;"></span>',
+						'<span class="glyphicon glyphicon-ok" style="visibility:hidden;"></span>',
+						'<span class="glyphicon glyphicon-download-alt" style="visibility:hidden;"></span>',
+						'<div class="row" style="margin-top:100px;">',
+							'<div class="col-md-9 col-lg-8 col-md-push-3 col-lg-push-2 column">',
+								'<div class="row">',
+									'<div id="localClientConnectedDiv" class="col-md-6 column">',
+										'[[connectedToModManager]]',
+									'</div>',
+									'<div id="dotahostLobbyConnectedDiv" class="col-md-6 column">',
+										'[[connectedToLobbyManager]]',
+									'</div>',
 								'</div>',
-								'<div id="dotahostLobbyConnectedDiv" class="col-md-6 column">',
-									'[[connectedToLobbyManager]]',
+								'<div class="row">',
+									'<div class="col-md-12 column">',
+										'<h3 class="text-left">',
+											'<span style="float:left;">Lobbies</span>{{0}}',
+											function(args){
+												return $('<button>').attr({'type':'button', 'style':'float:right;margin-left:5px;', 'class':'btn btn-primary', 'data-toggle':'modal', 'data-target':'#createLobbyOptions'}).text('Create Lobby').click(function(){
+													refreshCreateLobbyModal();
+												});
+											},
+											'{{1}}',
+											function(args){
+												return $('<button>').attr({'type':'button', 'style':'float:right;margin-left:5px;', 'class':'btn btn-info', 'data-toggle':'modal', 'data-target':'#settings'}).text('Settings').click(function(){
+													openSettingsModal();
+												});
+											},
+											'{{2}}',
+											function(args){
+												return $('<button>').attr({'type':'button', 'style':'float:right;', 'class':'btn btn-primary btn-warning'}).text('Logout').click(function(){
+													location.href = 'logout.php';
+												});
+											},
+										'</h3>',
+									'</div>',
+									'<div class="col-md-6 column" style="text-align:right;">',
+										 '',
+									'</div>',
+								'</div>',
+								'<div class="row">',
+									'<div id="homeLobbiesTable" class="col-md-12 column">',
+										'<span style="margin-left:50px;">'+spinner+'</span>',
+									'</div>',
 								'</div>',
 							'</div>',
-							'<div class="row">',
-								'<div class="col-md-12 column">',
-									'<h3 class="text-left">',
-										'<span style="float:left;">Lobbies</span>{{0}}',
-										function(args){
-											return $('<button>').attr({'type':'button', 'style':'float:right;margin-left:5px;', 'class':'btn btn-primary', 'data-toggle':'modal', 'data-target':'#createLobbyOptions'}).text('Create Lobby').click(function(){
-												refreshCreateLobbyModal();
-											});
-										},
-										'{{1}}',
-										function(args){
-											return $('<button>').attr({'type':'button', 'style':'float:right;margin-left:5px;', 'class':'btn btn-info', 'data-toggle':'modal', 'data-target':'#settings'}).text('Settings').click(function(){
-												openSettingsModal();
-											});
-										},
-										'{{2}}',
-										function(args){
-											return $('<button>').attr({'type':'button', 'style':'float:right;', 'class':'btn btn-primary btn-warning'}).text('Logout').click(function(){
-												location.href = 'logout.php';
-											});
-										},
-									'</h3>',
-								'</div>',
-								'<div class="col-md-6 column" style="text-align:right;">',
-									 '',
-								'</div>',
+							'<div id="addonStatusContainer" class="col-md-3 col-lg-2 col-md-pull-9 col-lg-pull-8 column"></div>',
+							'<div class="col-md-0 col-lg-2 column">',
 							'</div>',
-							'<div class="row">',
-								'<div id="homeLobbiesTable" class="col-md-12 column">',
-									'<span style="margin-left:50px;">'+spinner+'</span>',
-								'</div>',
-							'</div>',
-						'</div>',
-						'<div id="addonStatusContainer" class="col-md-3 col-lg-2 col-md-pull-9 col-lg-pull-8 column"></div>',
-						'<div class="col-md-0 col-lg-2 column">',
-						'</div>',
-					'</div>'
+						'</div>'
+					],
+
+					// User is white NOT listed
+					[function(args) {return !user || !user.whitelisted;},
+						'<h1>Rats!</h1>',
+						'<p>You\'re not a beta participant :(</p>'
+					]
 				]
 			]),
 
@@ -615,7 +624,7 @@ var wsClientLobby;
 					'<div class="col-lg-0 col-md-0 col-sm-0 column col-xl-2"></div>',
 					'<div class="col-lg-8 col-md-8 col-sm-8 column col-xl-6">',
 						'<div class="well well-sm" style="height:300px;">',
-							'<div id="lodLobbyChat" style="width:100%;height:calc(100% - 24px);overflow-y:auto;">', 
+							'<div id="lodLobbyChat" style="width:100%;height:calc(100% - 24px);overflow-y:auto;">',
 							'</div>',
 							'<div class="input-group" style="margin:0 -11px 0 -10px;">',
 								'{{4}}',
@@ -1449,7 +1458,7 @@ var wsClientLobby;
 
 	});
 
-	
+
 
 	function loadAppByUri(appUri) {
 
@@ -1520,7 +1529,7 @@ var wsClientLobby;
 		setEvents();
 
 		goToAppPage = setTimeout(
-			appWasNotFound, 
+			appWasNotFound,
 			1000
 		);
 	}
