@@ -25,7 +25,7 @@
 		token: <?php echo('"' . $steamprofile['token'] . '"'); ?>,
 		badges: <?php echo($steamprofile['badges']); ?>,
 		cosmetics: <?php echo($steamprofile['cosmetics']); ?>,
-		whitelisted: <?php echo(property_exists($whitelist, $steamprofile['steamid32']) ? '1' : '0'); ?>,
+		whitelisted: <?php echo($whitelist != NULL && property_exists($whitelist, $steamprofile['steamid32']) ? '1' : '0'); ?>,
 	};
 <?php
 	} else {
