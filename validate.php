@@ -29,9 +29,15 @@
         // Check if we found any
         if($row) {
             // Grab the whitelist
-            $whitelist = json_decode(file_get_contents('beta/whitelist.json') || '{}');
+            $whitelist = json_decode(file_get_contents('beta/whitelist.json'));
+            $whitelisted = $whitelist != NULL && isset($whitelist->$steamID);
 
-?>{"0":"<?PHP echo $steamID; ?>","1":"<?PHP echo addslashes($row[1]); ?>","2":"<?PHP echo $row[0]; ?>","3":"<?PHP echo $row[2]; ?>","4":"<?PHP echo $row[3]; ?>","5":"<?PHP echo $row[4]; ?>","6":"<?PHP echo($whitelist != NULL && property_exists($whitelist, $steamprofile['steamid32']) ? '1' : '0') ?>"}<?PHP
+            // Check if the user is white listed
+            if($whitelisted) {
+                echo '{"0":"'.$steamID.'","1":"'.addslashes($row[1]).'","2":'.$row[0].'","3":'.$row[2].'","4":'.$row[3].'"}';
+            } else {
+                echo failString;
+            }
         } else {
             echo $failString;
             return;

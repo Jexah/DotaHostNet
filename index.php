@@ -8,6 +8,7 @@
 
 		// Load the whitelist
 		$whitelist = json_decode(file_get_contents('beta/whitelist.json'));
+		$whitelisted = $whitelist != NULL && isset($whitelist->$steamprofile['steamid32']);
 ?>
 	var user = {
 		steamid: <?php echo($steamprofile['steamid32']); ?>,
@@ -25,7 +26,7 @@
 		token: <?php echo('"' . $steamprofile['token'] . '"'); ?>,
 		badges: <?php echo($steamprofile['badges']); ?>,
 		cosmetics: <?php echo($steamprofile['cosmetics']); ?>,
-		whitelisted: <?php echo($whitelist != NULL && property_exists($whitelist, $steamprofile['steamid32']) ? '1' : '0'); ?>,
+		whitelisted: <?php echo(var_export($whitelisted)); ?>,
 	};
 <?php
 	} else {
