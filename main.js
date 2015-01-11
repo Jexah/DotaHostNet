@@ -213,7 +213,7 @@ var wsClientLobby;
 							// Replace in the new div
 							arg = arg.replace(matches[j], '<span class="' + replacePrefix + '" functionName="' + matches[j].substring(2, matches[j].length-2) + '"></span>');
 						}
-					}
+					}8
 
 					this.compiledString += arg;
 				} else if(argType == 'function') {
@@ -435,17 +435,23 @@ var wsClientLobby;
 					},
 
 					'connectedToLobbyManager':function(args){
-						if(isVerified){
-							return ''+
-							'<div class="alert alert-success">'+
-								'<h4>LobbyManager</h4><span class="glyphicon glyphicon-ok" style="position:absolute;left:calc(100% - 50px);top:10px;"></span>'+
-								'<strong>Successfully</strong> verified user profile!'+
-							'</div>';
-						}else{
+						if(isVerified == null){
 							return ''+
 							'<div class="alert alert-info">'+
 								'<h4>LobbyManager!</h4><span style="position:absolute;left:calc(100% - 50px);top:-10px;">'+spinner+'</span>'+
 								'<strong>Attempting</strong> to connect to Dotahost LobbyManager.'+
+							'</div>'
+						}else if(!isVerified){
+							return ''+
+							'<div class="alert alert-info">'+
+								'<h4>LobbyManager!</h4><span style="position:absolute;left:calc(100% - 50px);top:-10px;">'+spinner+'</span>'+
+								'<strong>Failed</strong> to verify user profile.'+
+							'</div>';
+						}else{
+							return ''+
+							'<div class="alert alert-success">'+
+								'<h4>LobbyManager</h4><span class="glyphicon glyphicon-ok" style="position:absolute;left:calc(100% - 50px);top:10px;"></span>'+
+								'<strong>Successfully</strong> verified user profile!'+
 							'</div>';
 						}
 					}
@@ -821,6 +827,7 @@ var wsClientLobby;
 					isVerified = true;
 					wsClientLobby.send('getPage');
 				} else {
+					isVerified = false;
 					refreshHome();
 				}
 			},
@@ -920,6 +927,7 @@ var wsClientLobby;
 		function addPlayerToTeamList(listGroup, team_players, unallocated, teamid, slotid, avatarLeft){
 			var player;
 			var empty;
+
 			if(team_players.hasOwnProperty(slotid)){
 				player = team_players[slotid];
 				empty = false;
@@ -932,6 +940,9 @@ var wsClientLobby;
 				player[PLAYER_BADGES] = '0'
 				empty = true;
 			}
+
+			console.log(JSON.stringify(player));
+
 			var nameSpan = $('<span>').attr('class', 'name').text(player[PLAYER_PERSONANAME]);
 			var img = $('<img>').attr({'src':player[PLAYER_AVATAR], 'style':'border:0;background-size:contain;height:32px;width:32px;margin-'+(avatarLeft?'right':'left')+':10px;'});
 			var badgesSpan = $('<span>').attr('class', 'badges '+(avatarLeft?'pull-right ':'pull-left '));
@@ -943,6 +954,8 @@ var wsClientLobby;
 					badgesSpan.append($('<span>').attr('class', BADGES[BADGES_CLASS][i]).text(BADGES[BADGES_TEXT][i]));
 				}
 			}
+			console.log(''+player[PLAYER_COSMETICS]);
+			console.log(COSMETICS[''+player[PLAYER_COSMETICS]])
 			var container = $('<a>').attr({'id':''+teamid+slotid, 'slotid':slotid, 'href':player[PLAYER_PROFILEURL], 'onfocus':'this.blur();', 'tabindex':'-1', 'target':(empty?'_self':'_blank'), 'style':'white-space:nowrap;padding:10px 10px;overflow:hidden;', 'class':'list-group-item'+(COSMETICS[''+player[PLAYER_COSMETICS]])})
 				.append(avatarLeft?img:badgesSpan)
 				.append(nameSpan)
@@ -1039,6 +1052,12 @@ var wsClientLobby;
 		}
 
 		function setTeamListElementToPlayer(element, player, avatarLeft, deleteSlot){
+
+
+
+
+			console.log(JSON.stringify(player));
+
 			if(typeof deleteSlot === "undefined") {
 				deleteSlot = false;
 			}
@@ -1059,6 +1078,8 @@ var wsClientLobby;
 				});
 				return;
 			}
+			console.log(''+player[PLAYER_COSMETICS]);
+			console.log(COSMETICS[''+player[PLAYER_COSMETICS]])
 			element.attr('class', 'list-group-item'+(COSMETICS[''+player[PLAYER_COSMETICS]]));
 			element.attr({'href':player[PLAYER_PROFILEURL], 'target':(player?'_blank':'_self')});
 			element.find('span.name').text(player[PLAYER_PERSONANAME]);
@@ -1094,8 +1115,10 @@ var wsClientLobby;
 
 			wsClientManager.sendReal = wsClientManager.send;
 			wsClientManager.send = function(string){
-				console.log('Sent:');
-				console.log(string);
+				if(string != 'time'){
+					console.log('Sent:');
+					console.log(string);
+				}
 				wsClientManager.sendReal(string);
 			}
 
@@ -1518,7 +1541,7 @@ var wsClientLobby;
 			$('#localClientConnectedDiv').html(
 				'<div class="alert alert-danger">'+
 					'<h4>ModManager</h4><span class="glyphicon glyphicon-remove" style="position:absolute;left:calc(100% - 50px);top:10px;"></span>'+
-					'<strong>Failed</strong> to connect to ModManager (<a href="https://github.com/Jexah/DotaHostReleases/releases/download/' + managerVersion + '-mm/DotaHostManager.exe" download>download</a>)'+
+					'<strong>Failed</strong> to connect to ModManager (<a href="https://github.com/Jexah/DotaHostReleases/releases/download/' + managerVersion + '/DotaHostManager.exe" download>download</a>)'+
 				'</div>'
 			);
 			$('#addonStatusContainer').html('');
@@ -1547,7 +1570,6 @@ var wsClientLobby;
 	}
 
 })();
-
 
 
 
