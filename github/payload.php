@@ -63,7 +63,7 @@
 		$downloadFileNameNoExtension_str = implode('.', $downloadFileName_arr);
 
 		// Write tagname and crc32 to addons folder
-		file_put_contents('..\\addons\\'.$downloadFileNameNoExtension_str.'.txt', $tag_name."\n".$hash);
+		file_put_contents('..\\addons\\'.$downloadFileNameNoExtension_str.'.txt', $downloadURL_str."\n".$hash);
 
 		// Delete file downloaded
 		unlink(getcwd().'\\'.$downloadFileName_str);
