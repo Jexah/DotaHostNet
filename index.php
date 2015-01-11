@@ -1,3 +1,10 @@
+<?php 
+	if(file_exists('maintenance.php')) {
+		header("Location: http://dotahost.net/maintenance.php");
+		die();
+	}
+?>
+
 <script>
 <?php
 	include_once('sql.php');
