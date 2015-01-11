@@ -41,8 +41,8 @@
 
 	// Grab the manager version info
 	$managerVersion = 'UNKNOWN VERSION';
-	if(file_exists('version.txt')) {
-		$managerVersion = file_get_contents('version.txt');
+	if(file_exists('addons\\DotaHostManager.txt')) {
+		$managerVersion = file('addons\\DotaHostManager.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES)[0];
 	}
 ?>
 	var managerVersion = "<?php echo($managerVersion); ?>";
