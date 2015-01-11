@@ -60,6 +60,7 @@ var wsClientLobby;
 		var LOBBY_MAX_PLAYERS = "3";
 		var LOBBY_CURRENT_PLAYERS = "4";
 		var LOBBY_REGION = "5";
+		var LOBBY_ACTIVE = "6";
 
 		var ADDON_ID = "0";
 		var ADDON_OPTIONS = "1";
@@ -673,8 +674,12 @@ var wsClientLobby;
 					'<div class="col-lg-4 col-md-4 col-sm-4 column col-xl-2">',
 						'{{5}}',
 						function(args){
-							return $('<button>').attr({'id':'leaveLobbyReconnect', 'class':'btn btn-default btn-lg', 'style':'width:100%;margin-bottom:20px;'}).text('Leave Lobby').click(function(){
-								wsClientLobby.send('leaveLobby');
+							return $('<button>').attr({'id':'leaveLobbyReconnect', 'class':'btn btn-default btn-lg', 'style':'width:100%;margin-bottom:20px;'}).text(currentLobby[LOBBY_ACTIVE] == '1'?'Reconnect':'Leave Lobby').click(function(){
+								if(currentLobby[LOBBY_ACTIVE] == '1'){
+									location.href = "steam://connect/" + x[1];
+								}else{
+									wsClientLobby.send('leaveLobby');
+								}
 							});
 						},
 						'{{1}}',
