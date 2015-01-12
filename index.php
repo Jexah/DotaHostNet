@@ -1,4 +1,4 @@
-<?php 
+<?php
 	if(file_exists('maintenance.php')) {
 		header("Location: http://dotahost.net/maintenance.php");
 		die();
@@ -34,6 +34,36 @@
 		badges: <?php echo($steamprofile['badges']); ?>,
 		cosmetics: <?php echo($steamprofile['cosmetics']); ?>,
 		whitelisted: <?php echo(var_export($whitelisted)); ?>,
+
+		<?php
+			// Check bans
+			if(isset($_SESSION['steam_banexpiration'])) {
+				// Grab the time info
+				$time = strtotime($_SESSION['steam_banexpiration']);
+				$curtime = time();
+
+				// Check if the ban has expired
+				if($curtime > $time) {
+		            // Delete the ban info
+		            unset($_SESSION['steam_bansteamid']);
+			        unset($_SESSION['steam_banexpiration']);
+			        unset($_SESSION['steam_banreason']);
+			    } else {
+			    	// User is banned, add banned info
+			    	echo 'banreason: "'.addslashes($_SESSION['steam_banreason']).'",'."\r\n";
+			    	echo "\t\t".'banexpiration: "'.addslashes($_SESSION['steam_banexpiration']).'",'."\r\n";
+
+			    	// Check for alt accounts
+			    	if($_SESSION['steam_steamid'] != $_SESSION['steam_bansteamid']) {
+			    		// This is an alt account
+			    		echo "\t\talt: true,\r\n";
+
+			    		// We should ban them too
+
+			    	}
+			    }
+			}
+		?>
 	};
 <?php
 	} else {
