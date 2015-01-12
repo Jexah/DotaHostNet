@@ -911,6 +911,9 @@ var wsClientLobby;
 					}
 				}
 				k(5);
+			},
+			'cancelBeginGame':function(e, x){
+				console.log('START GAME CANCELED');
 			}
 		}
 		var timeoutPrevention;
@@ -1546,7 +1549,7 @@ var wsClientLobby;
 			$('#localClientConnectedDiv').html(
 				'<div class="alert alert-danger">'+
 					'<h4>ModManager</h4><span class="glyphicon glyphicon-remove" style="position:absolute;left:calc(100% - 50px);top:10px;"></span>'+
-					'<strong>Failed</strong> to connect to ModManager (<a href="https://github.com/Jexah/DotaHostReleases/releases/download/' + managerVersion + '/DotaHostManager.exe" download>download</a>)'+
+					'<strong>Failed</strong> to connect to ModManager (<a href="' + managerVersion + '" download>download</a>)'+
 				'</div>'
 			);
 			$('#addonStatusContainer').html('');
