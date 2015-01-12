@@ -43,8 +43,27 @@ function generateToken() {
         }
     }
 
+    // Check if they have any bans on record
+    $query = "SELECT expiration, reason FROM bans WHERE steamID=".$steamID." AND NOW() < expiration LIMIT 1;";
+    if($result = $mysqli->query($query)) {
+        // Does this user have a ban?
+        if($result->num_rows > 0) {
+            // Pull the first ban only
+            $row = $result->fetch_row();
+
+            // Store ban stuff
+            $_SESSION['steam_bansteamid'] = $_SESSION['steam_steamid'];
+            $_SESSION['steam_banexpiration'] = $row[0];
+            $_SESSION['steam_banreason'] = $row[1];
+        }
+    } else {
+        echo "Failed to check bans.";
+        exit(1);
+        return;
+    }
+
     // Check if the account already exists
-    $query = "SELECT avatar, personaname, profileurl, badges, cosmetics FROM steamUsers WHERE steamID=".$steamID;
+    $query = "SELECT avatar, personaname, profileurl, badges, cosmetics FROM steamUsers WHERE steamID=".$steamID.";";
     if($result = $mysqli->query($query)) {
         // Does this user already exist?
         if($result->num_rows <= 0) {
