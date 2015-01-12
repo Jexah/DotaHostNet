@@ -764,7 +764,13 @@ var wsClientLobby;
 				populateLobbies();
 			},
 			'leaveLobby':function(e, x){
-				refreshHome();
+				if(x.length == 1){
+					refreshHome();
+				}else{
+					var slotid = x[1];
+					var teamid = x[2];
+					removePlayerFromTeam(slotid, currentLobby[LOBBY_TEAMS][teamid], teamid, teamKey == '2');
+				}
 			},
 			'chat':function(e, x){
 				var personaname;
@@ -820,7 +826,7 @@ var wsClientLobby;
 						var player = players[playerKey];
 						if(player[PLAYER_STEAMID] == x[3]){
 							teamRemove = team;
-							removePlayerFromTeam(player, playerKey, teamRemove, teamKey, teamKey == '2');
+							removePlayerFromTeam(playerKey, teamRemove, teamKey, teamKey == '2');
 							addPlayerToTeam(player, teams[teamAddKey], slotID, teamAddKey);
 							return;
 						}
@@ -1112,7 +1118,7 @@ var wsClientLobby;
 			}
 		}
 
-		function removePlayerFromTeam(player, playerKey, team, teamid, deleteSlot){
+		function removePlayerFromTeam(playerKey, team, teamid, deleteSlot){
 			var players = team[TEAM_PLAYERS];
 			delete players[playerKey];
 			setTeamListElementToPlayer($('#'+teamid+playerKey), null, teamid==0, deleteSlot);
