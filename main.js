@@ -769,7 +769,8 @@ var wsClientLobby;
 				}else{
 					var slotid = x[1];
 					var teamid = x[2];
-					removePlayerFromTeam(slotid, currentLobby[LOBBY_TEAMS][teamid], teamid, teamKey == '2');
+					console.log(JSON.stringify(currentLobby));
+					removePlayerFromTeam(slotid, currentLobby[LOBBY_TEAMS][teamid], teamid, teamid == '2');
 				}
 			},
 			'chat':function(e, x){
