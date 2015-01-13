@@ -52,15 +52,6 @@
 			    	// User is banned, add banned info
 			    	echo 'banreason: "'.addslashes($_SESSION['steam_banreason']).'",'."\r\n";
 			    	echo "\t\t".'banexpiration: "'.addslashes($_SESSION['steam_banexpiration']).'",'."\r\n";
-
-			    	// Check for alt accounts
-			    	if($_SESSION['steam_steamid'] != $_SESSION['steam_bansteamid']) {
-			    		// This is an alt account
-			    		echo "\t\talt: true,\r\n";
-
-			    		// We should ban them too
-
-			    	}
 			    }
 			}
 		?>
