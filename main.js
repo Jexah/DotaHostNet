@@ -1275,7 +1275,8 @@ var wsClientLobby;
 
 		selectPage('home', [user != null]);
 
-		if(user != null){
+		// Load up the website if they are whitelisted, and not banned
+		if(user != null && user.whitelisted && !user.banreason){
 			setTimeout(setupClientSocket, 1000);
 			setTimeout(setupWebLobbySocket, 1000);
 		}
