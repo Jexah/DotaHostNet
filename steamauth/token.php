@@ -44,7 +44,7 @@ function generateToken() {
     }
 
     // Check if they have any bans on record
-    $query = "SELECT expiration, reason FROM bans WHERE steamID=".$steamID." AND NOW() < expiration LIMIT 1;";
+    $query = "SELECT expiration, reason FROM bans WHERE steamID=".$steamID." AND NOW() < expiration ORDER BY expiration DESC LIMIT 1;";
     if($result = $mysqli->query($query)) {
         // Does this user have a ban?
         if($result->num_rows > 0) {
@@ -55,6 +55,26 @@ function generateToken() {
             $_SESSION['steam_bansteamid'] = $_SESSION['steam_steamid'];
             $_SESSION['steam_banexpiration'] = $row[0];
             $_SESSION['steam_banreason'] = $row[1];
+        } else {
+            // User shouldn't be banned, check for remaining ban stuff
+            if(isset($_SESSION['steam_banexpiration'])) {
+                if($_SESSION['steam_bansteamid'] != $_SESSION['steam_steamid']) {
+                    // Alt account! Lets copy the ban across
+                    $query = "INSERT INTO bans (steamID, expiration, reason) VALUES (".$steamID.", '".$mysqli->real_escape_string($_SESSION['steam_banexpiration'])."', '".$mysqli->real_escape_string($_SESSION['steam_banreason'])."');";
+
+                    // Run the query
+                    if(!$mysqli->query($query)) {
+                        echo "Failed to update bans.";
+                        exit(1);
+                        return;
+                    }
+                } else {
+                    // User should be unbanned, remove remaining stuff
+                    unset($_SESSION['steam_bansteamid']);
+                    unset($_SESSION['steam_banexpiration']);
+                    unset($_SESSION['steam_banreason']);
+                }
+            }
         }
     } else {
         echo "Failed to check bans.";
@@ -70,7 +90,7 @@ function generateToken() {
             // User does NOT exist
             $query = "INSERT INTO steamUsers
                 (steamID, avatar, personaname, profileurl, badges, cosmetics) VALUES
-                (".$steamID.", '".$avatar."', '".$personaname."', '".$profileurl."', 0, 0)";
+                (".$steamID.", '".$avatar."', '".$personaname."', '".$profileurl."', 0, 0);";
 
             // Store badge stuff
             $_SESSION['steam_badges'] = 0;
