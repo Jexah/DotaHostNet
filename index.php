@@ -118,6 +118,16 @@
 				</div>
 			</div>
 		</div>
+		<div id="ready" class="modal fade" data-backdrop="static" style="">
+			<div id="readyBorder" class="modal-dialog">
+				<div class="modal-content">
+					<div id="readyBody" class="modal-body">
+						<button id="readyBodyAccept" type="button" class="btn btn-success btn-lg">Accept</button>
+						<button id="readyBodyDecline" type="button" class="btn btn-danger btn-lg">Decline</button>
+					</div>
+				</div>
+			</div>
+		</div>
 		<div id="main" class="container-fluid"></div>
 		<iframe id="go" style="display:none"></iframe>
 		<script>
