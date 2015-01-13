@@ -927,16 +927,32 @@ var wsClientLobby;
 				updateDotaPathOption();
 			},
 			'lobbyFull':function(e, x){
-				var k = function(j){
-					if(j == 5){
-						console.log('starting game...');
-					}
-					console.log(j);
-					if(j != 0){
-						setTimeout((function(a){return function(){a(j-1)}})(k), 1000);
-					}
-				}
-				k(5);
+				var ready = $('#ready');
+				var readyBorder = $('#readyBorder');
+				var readyBody = $('#readyBody');
+				var accept = $('#readyBodyAccept');
+				var decline = $('#readyBodyDecline');
+
+				readyBorder.css({'width':'550px', 'height':'110px', 'position': 'absolute', 'top':'50%','left':'50%','margin-top': '-50px','margin-left':'-275px','padding':'20px','overflow':'hidden'});
+				readyBody.css('height', '80px');
+				readyBody.children('button').css({'height':'50px', 'width':'220px'});
+				accept.attr('class', 'btn btn-success pull-left');
+				decline.attr('class', 'btn btn-danger pull-right');
+				ready.modal('show');
+
+				var readyTimeout = setTimeout(function(){ready.modal('hide');refreshHome();}, 20000);
+
+				accept.click(function(){
+					wsClientLobby.send('ready');
+					ready.modal('hide');
+					clearTimeout(readyTimeout);
+				});
+				decline.click(function(){
+					wsClientLobby.send('decline');
+					ready.modal('hide');
+					refreshHome();
+					clearTimeout(readyTimeout);
+				});
 			},
 			'cancelBeginGame':function(e, x){
 				console.log('START GAME CANCELED');
@@ -975,7 +991,10 @@ var wsClientLobby;
 				empty = true;
 			}
 
+			console.log("addPlayerToTeamList");
 			console.log(JSON.stringify(player));
+			console.log("teamid: " + teamid);
+			console.log("slotid: " + slotid);
 
 			var nameSpan = $('<span>').attr('class', 'name').text(player[PLAYER_PERSONANAME]);
 			var img = $('<img>').attr({'src':player[PLAYER_AVATAR], 'style':'border:0;background-size:contain;height:32px;width:32px;margin-'+(avatarLeft?'right':'left')+':10px;'});
@@ -1088,8 +1107,7 @@ var wsClientLobby;
 		function setTeamListElementToPlayer(element, player, avatarLeft, deleteSlot){
 
 
-
-
+			console.log("setTeamListElementToPlayer");
 			console.log(JSON.stringify(player));
 
 			if(typeof deleteSlot === "undefined") {
