@@ -491,8 +491,27 @@ var wsClientLobby;
 				],
 				// User is logged in
 				[function(args) {return args[0];},
+					// User is banned
+					[function(args) {return user && user.banreason;},
+						'<div class="row">',
+							'<div class="col-md-3 column">',
+							'</div>',
+							'<div class="col-md-6 column">',
+								'{{0}}{{1}}',
+								function(args){
+									return user.banreason;
+								},
+								function(args){
+									return $('<button>').attr({'type':'button', 'style':'float:right;', 'class':'btn btn-primary btn-warning'}).text('Logout').click(function(){
+										location.href = 'logout.php';
+									});
+								},
+							'</div>',
+						'</div>'
+					],
+
 					// User is white listed
-					[function(args) {return user && user.whitelisted;},
+					[function(args) {return user && user.whitelisted && !user.banreason;},
 						'<span class="glyphicon glyphicon-remove" style="visibility:hidden;"></span>',
 						'<span class="glyphicon glyphicon-ok" style="visibility:hidden;"></span>',
 						'<span class="glyphicon glyphicon-download-alt" style="visibility:hidden;"></span>',
@@ -546,7 +565,7 @@ var wsClientLobby;
 					],
 
 					// User is white NOT listed
-					[function(args) {return !user || !user.whitelisted;},
+					[function(args) {return !user || (!user.whitelisted && !user.banreason);},
 						'<div class="row">',
 							'<div class="col-md-3 column">',
 							'</div>',
