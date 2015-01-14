@@ -803,7 +803,6 @@ var wsClientLobby;
 						var player = players[playerKey];
 						if(player[PLAYER_STEAMID] == x[1]){
 							personaname = player[PLAYER_PERSONANAME];
-							personaname = player[PLAYER_COSMETICS];
 						}
 					}
 				}
@@ -902,6 +901,7 @@ var wsClientLobby;
 					location.href = "steam://connect/" + x[1];
 				});
 				location.href = "steam://connect/" + x[1];
+				ready.modal('hide');
 			},
 
 			'gameServerInfo':function(e, x){
@@ -930,6 +930,13 @@ var wsClientLobby;
 				var ready = $('#ready');
 				var readyBorder = $('#readyBorder');
 				var readyBody = $('#readyBody');
+
+				readyBody.html(
+					$('<button>').attr({'id':'readyBodyAccept', 'type':'button', 'class':'btn btn-success btn-lg'}).text('Accept')
+				).append(
+					$('<button>').attr({'id':'readyBodyDecline', 'type':'button', 'class':'btn btn-danger btn-lg'}).text('Decline')
+				);
+				
 				var accept = $('#readyBodyAccept');
 				var decline = $('#readyBodyDecline');
 
@@ -956,6 +963,21 @@ var wsClientLobby;
 			},
 			'cancelBeginGame':function(e, x){
 				console.log('START GAME CANCELED');
+			},
+			'generatingServer':function(e, x){
+				var ready = $('#ready');
+				var readyBorder = $('#readyBorder');
+				var readyBody = $('#readyBody');
+
+				readyBody.html($('<h1>').text('Preparing server...'));
+
+				readyBorder.css({'width':'550px', 'height':'110px', 'position': 'absolute', 'top':'50%','left':'50%','margin-top': '-50px','margin-left':'-275px','padding':'20px','overflow':'hidden'});
+				readyBody.css('height', '80px');
+				readyBody.children('button').css({'height':'50px', 'width':'220px'});
+				accept.attr('class', 'btn btn-success pull-left');
+				decline.attr('class', 'btn btn-danger pull-right');
+				ready.modal('show');
+
 			}
 		}
 		var timeoutPrevention;
@@ -1232,6 +1254,8 @@ var wsClientLobby;
 
 		function setupWebLobbySocket(){
 			wsClientLobby = new WebSocket("ws://dotahost.net:2075");
+
+			window.fuk = function(){wsClientLobby.send('startGames');};
 
 			wsClientLobby.sendReal = wsClientLobby.send;
 			wsClientLobby.send = function(string){
