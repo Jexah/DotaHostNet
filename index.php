@@ -28,12 +28,10 @@
 		avatarmedium: <?php echo('"' . $steamprofile['avatarmedium'] . '"'); ?>,
 		avatarfull: <?php echo('"' . $steamprofile['avatarfull'] . '"'); ?>,
 		personastate: <?php echo($steamprofile['personastate']); ?>,
-		primaryclanid: <?php echo($steamprofile['primaryclanid']); ?>,
-		timecreated: <?php echo($steamprofile['timecreated']); ?>,
 		token: <?php echo('"' . $steamprofile['token'] . '"'); ?>,
 		badges: <?php echo($steamprofile['badges']); ?>,
 		cosmetics: <?php echo($steamprofile['cosmetics']); ?>,
-		whitelisted: <?php echo(var_export($whitelisted)); ?>,
+		whitelisted: <?php echo(var_export($whitelisted)); ?>
 
 		<?php
 			// Check bans
