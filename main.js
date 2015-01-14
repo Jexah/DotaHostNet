@@ -942,7 +942,7 @@ var wsClientLobby;
 
 				readyBorder.css({'width':'550px', 'height':'110px', 'position': 'absolute', 'top':'50%','left':'50%','margin-top': '-50px','margin-left':'-275px','padding':'20px','overflow':'hidden'});
 				readyBody.css('height', '80px');
-				readyBody.children('button').css({'height':'50px', 'width':'220px'});
+				readyBody.children('button').css({'height':'50px', 'width':'220px', 'font-size':'18px'});
 				accept.attr('class', 'btn btn-success pull-left');
 				decline.attr('class', 'btn btn-danger pull-right');
 				ready.modal('show');
@@ -951,13 +951,14 @@ var wsClientLobby;
 
 				accept.click(function(){
 					wsClientLobby.send('ready');
-					ready.modal('hide');
+					accept.prop('disabled', true);
 					clearTimeout(readyTimeout);
 				});
 				decline.click(function(){
 					wsClientLobby.send('decline');
-					ready.modal('hide');
 					refreshHome();
+					ready.modal('hide');
+					accept.prop('disabled', true);
 					clearTimeout(readyTimeout);
 				});
 			},
@@ -969,12 +970,11 @@ var wsClientLobby;
 				var readyBorder = $('#readyBorder');
 				var readyBody = $('#readyBody');
 
-				readyBody.html($('<h1>').text('Preparing server...'));
+				readyBody.html($('<h4>').text('Preparing server...'));
 
 				readyBorder.css({'width':'550px', 'height':'110px', 'position': 'absolute', 'top':'50%','left':'50%','margin-top': '-50px','margin-left':'-275px','padding':'20px','overflow':'hidden'});
 				readyBody.css('height', '80px');
 				readyBody.children('button').css({'height':'50px', 'width':'220px'});
-				ready.modal('show');
 
 			}
 		}
