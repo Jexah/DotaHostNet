@@ -901,7 +901,7 @@ var wsClientLobby;
 					location.href = "steam://connect/" + x[1];
 				});
 				location.href = "steam://connect/" + x[1];
-				ready.modal('hide');
+				$('#ready').modal('hide');
 			},
 
 			'gameServerInfo':function(e, x){
@@ -936,7 +936,7 @@ var wsClientLobby;
 				).append(
 					$('<button>').attr({'id':'readyBodyDecline', 'type':'button', 'class':'btn btn-danger btn-lg'}).text('Decline')
 				);
-				
+
 				var accept = $('#readyBodyAccept');
 				var decline = $('#readyBodyDecline');
 
@@ -974,8 +974,6 @@ var wsClientLobby;
 				readyBorder.css({'width':'550px', 'height':'110px', 'position': 'absolute', 'top':'50%','left':'50%','margin-top': '-50px','margin-left':'-275px','padding':'20px','overflow':'hidden'});
 				readyBody.css('height', '80px');
 				readyBody.children('button').css({'height':'50px', 'width':'220px'});
-				accept.attr('class', 'btn btn-success pull-left');
-				decline.attr('class', 'btn btn-danger pull-right');
 				ready.modal('show');
 
 			}
@@ -1551,6 +1549,11 @@ var wsClientLobby;
 					input.prop('disabled', 'disabled');
 				})
 			);
+			if(dotaPath == ''){
+				openSettingsModal();
+				$('#settings').modal('show');
+				alert('Please enter your Dota 2 path.');
+			}
 		}
 
 		function refreshHome(){
