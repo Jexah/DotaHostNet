@@ -120,8 +120,15 @@
 			<div id="readyBorder" class="modal-dialog">
 				<div class="modal-content">
 					<div id="readyBody" class="modal-body">
-						<button id="readyBodyAccept" type="button" class="btn btn-success btn-lg">Accept</button>
-						<button id="readyBodyDecline" type="button" class="btn btn-danger btn-lg">Decline</button>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div id="invalid" class="modal fade" data-backdrop="static" style="">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-body">
+						You have opened DotaHost in another tab.
 					</div>
 				</div>
 			</div>
