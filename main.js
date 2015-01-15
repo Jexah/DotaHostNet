@@ -436,16 +436,18 @@ var wsClientLobby;
 					},
 
 					'connectedToLobbyManager':function(args){
-						if(isVerified == null){
+						if(isVerified === null){
+							console.log('verified');
+							console.log(isVerified);
 							return ''+
 							'<div class="alert alert-info">'+
 								'<h4>LobbyManager!</h4><span style="position:absolute;left:calc(100% - 50px);top:-10px;">'+spinner+'</span>'+
 								'<strong>Attempting</strong> to connect to Dotahost LobbyManager.'+
-							'</div>'
+							'</div>';
 						}else if(!isVerified){
 							return ''+
-							'<div class="alert alert-info">'+
-								'<h4>LobbyManager!</h4><span style="position:absolute;left:calc(100% - 50px);top:-10px;">'+spinner+'</span>'+
+							'<div class="alert alert-danger">'+
+								'<h4>LobbyManager</h4><span class="glyphicon glyphicon-remove" style="position:absolute;left:calc(100% - 50px);top:10px;"></span>'+
 								'<strong>Failed</strong> to verify user profile.'+
 							'</div>';
 						}else{
@@ -950,6 +952,7 @@ var wsClientLobby;
 				accept.click(function(){
 					wsClientLobby.send('ready');
 					accept.prop('disabled', true);
+					decline.prop('disabled', true);
 					clearTimeout(readyTimeout);
 				});
 				decline.click(function(){
@@ -957,6 +960,7 @@ var wsClientLobby;
 					refreshHome();
 					ready.modal('hide');
 					accept.prop('disabled', true);
+					decline.prop('disabled', true);
 					clearTimeout(readyTimeout);
 				});
 			},
@@ -1199,22 +1203,12 @@ var wsClientLobby;
 
 				clearTimeout(launchModManagerTimeout);
 
-				wsClientManager.send("getAddonStatus");
-				wsClientManager.send('getPatchGameInfo');
-
 				timeoutPrevention = setInterval(function(){wsClientManager.send("time");}, 1000);
 
-				$('#localClientConnectedDiv').html(
-					'<div class="alert alert-success">'+
-						'<h4>ModManager</h4><span class="glyphicon glyphicon-ok" style="position:absolute;left:calc(100% - 50px);top:10px;"></span>'+
-						'<strong>Successfully</strong> connected to ModManager!'+
-					'</div>'
-				);
-				$('#addonStatusContainer').append(
-					'<div id="lodStatus" class="bs-callout bs-callout-info col-sm-4 col-md-12" style="cursor:default;">'+
-						'<h4>Legends of Dota <span style="float:right;margin-top:-20px;margin-right:-4px;">'+spinner+'</span></h4>'+
-					'</div>'
-				);
+				refreshHome();
+				
+				wsClientManager.send("getAddonStatus");
+				wsClientManager.send('getPatchGameInfo');
 
 				updateSettingsOptions();
 			};
@@ -1224,12 +1218,12 @@ var wsClientLobby;
 					setTimeout(setupClientSocket, 250);
 					connectedClient = false;
 					launchModManagerTimeout = null;
-					refreshHome()
+					refreshHome();
+					clearInterval(timeoutPrevention);
 				}
 
 
 				updateSettingsOptions();
-				clearInterval(timeoutPrevention);
 			};
 			var onMessage = function(e){
 				console.log(e.data);
@@ -1546,7 +1540,7 @@ var wsClientLobby;
 					var input = group.children(':eq(1)');
 					wsClientManager.send(packArguments('setDotaPath', input.val()));
 					$(this).prop('disabled', 'disabled').text('Saving...');
-					input.prop('disabled', 'disabled');
+					input.prop('disabled', !dotaPath);
 				})
 			);
 			if(dotaPath == ''){
