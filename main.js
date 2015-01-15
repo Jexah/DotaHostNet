@@ -765,11 +765,9 @@ var wsClientLobby;
 				wsClientManager.send('getAddonStatus');
 			},
 			'page':function(e, x){
-				if(x[1] == currentPage && currentPage != 'home'){
-					return;
-				}
 				switch(x[1]){
 					case 'home':
+						lobbies = JSON.parse(x[2]);
 						refreshHome();
 						break;
 					case 'lobby':
@@ -975,7 +973,9 @@ var wsClientLobby;
 				readyBorder.css({'width':'550px', 'height':'110px', 'position': 'absolute', 'top':'50%','left':'50%','margin-top': '-50px','margin-left':'-275px','padding':'20px','overflow':'hidden'});
 				readyBody.css('height', '80px');
 				readyBody.children('button').css({'height':'50px', 'width':'220px'});
-
+			},
+			'invalid':function(e, c){
+				$('#invalid').modal('show');
 			}
 		}
 		var timeoutPrevention;
