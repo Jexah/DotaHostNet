@@ -20,9 +20,7 @@
 	var user = {
 		steamid: <?php echo($steamprofile['steamid32']); ?>,
 		communityvisibilitystate: <?php echo($steamprofile['communityvisibilitystate']); ?>,
-		profilestate: <?php echo($steamprofile['profilestate']); ?>,
 		personaname: <?php echo('"' . addslashes($steamprofile['personaname']) . '"'); ?>,
-		lastlogoff: <?php echo($steamprofile['lastlogoff']); ?>,
 		profileurl: <?php echo('"' . $steamprofile['profileurl'] . '"'); ?>,
 		avatar: <?php echo('"' . $steamprofile['avatar'] . '"'); ?>,
 		avatarmedium: <?php echo('"' . $steamprofile['avatarmedium'] . '"'); ?>,
