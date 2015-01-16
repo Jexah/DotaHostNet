@@ -143,5 +143,6 @@
 		<!-- Latest compiled and minified JavaScript -->
 		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>
 		<script src="main.js"></script>
+		<audio id="readyAudio" src="ready.wav" preload="auto" volume="1.0"></audio>
 	</body>
 </html>

@@ -120,6 +120,7 @@ var wsClientLobby;
 		var currentTeamID = '';
 		var currentPlayerID = '';
 		var thisPlayer = {};
+		var hasRequestedSetDotaPath = false;
 
 		var gameInfoPatched = null;
 
@@ -963,6 +964,7 @@ var wsClientLobby;
 					decline.prop('disabled', true);
 					clearTimeout(readyTimeout);
 				});
+				$('#readyAudio').get(0).play();
 			},
 			'cancelBeginGame':function(e, x){
 				console.log('START GAME CANCELED');
@@ -1206,7 +1208,7 @@ var wsClientLobby;
 				timeoutPrevention = setInterval(function(){wsClientManager.send("time");}, 1000);
 
 				refreshHome();
-				
+
 				wsClientManager.send("getAddonStatus");
 				wsClientManager.send('getPatchGameInfo');
 
@@ -1512,10 +1514,35 @@ var wsClientLobby;
 
 				args = JSON.stringify(lobby);
 
-				var msg = packArguments('createLobby', args);
-				wsClientLobby.send(msg);
+				var addons = lobby[LOBBY_ADDONS];
+				for(var addonKey in addons){
+					if(!addons.hasOwnProperty(addonKey)){continue;};
+					var addon = addons[addonKey];
+					switch(installedAddons[addon[ADDON_ID]]){
+						case ADDON_STATUS_ERROR:
+							alert('An unknown error has occured.');
+							break;
+						case ADDON_STATUS_MISSING:
+							alert('Please install the addon.');
+							break;
+						case ADDON_STATUS_UPDATE:
+							alert('Please update the addon.');
+							break;
+						case ADDON_STATUS_READY:
+							var msg = packArguments('createLobby', args);
+							wsClientLobby.send(msg);
 
-				$('#createLobbyOptions').modal('toggle');
+							$('#createLobbyOptions').modal('toggle');
+							break;
+						default:
+							if(connectedClient){
+								alert('Please install the addon.');
+							}else{
+								alert('Please run the manager.');
+							}
+							break;
+					}
+				}
 			})
 		}
 
@@ -1543,10 +1570,11 @@ var wsClientLobby;
 					input.prop('disabled', !dotaPath);
 				})
 			);
-			if(dotaPath == ''){
+			if(dotaPath == '' && !hasRequestedSetDotaPath){
 				openSettingsModal();
 				$('#settings').modal('show');
 				alert('Please enter your Dota 2 path.');
+				hasRequestedSetDotaPath = true;
 			}
 		}
 
