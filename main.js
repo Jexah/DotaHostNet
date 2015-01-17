@@ -694,6 +694,12 @@ var wsClientLobby;
 						'</div>',
 					'</div>',
 					'<div class="col-lg-4 col-md-4 col-sm-4 column col-xl-2">',
+						'{{6}}',
+						function(args){
+							return $('<button>').attr({'class':'btn btn-success btn-lg', 'style':'width:100%;margin-bottom:20px;'}).text('Start Game').click(function(){
+								wsClientLobby.send('startGame');
+							});
+						},
 						'{{5}}',
 						function(args){
 							return $('<button>').attr({'id':'leaveLobbyReconnect', 'class':'btn btn-default btn-lg', 'style':'width:100%;margin-bottom:20px;'}).text(currentLobby[LOBBY_ACTIVE] == '1'?'Reconnect':'Leave Lobby').click(function(){
@@ -791,6 +797,7 @@ var wsClientLobby;
 					var teamid = x[2];
 					console.log(JSON.stringify(currentLobby));
 					removePlayerFromTeam(slotid, currentLobby[LOBBY_TEAMS][teamid], teamid, teamid == '2');
+					$('#ready').modal('hide');
 				}
 			},
 			'chat':function(e, x){
@@ -1112,7 +1119,7 @@ var wsClientLobby;
 								alert('Please update the addon.');
 								break;
 							case ADDON_STATUS_READY:
-								wsClientLobby.send(packArguments('joinLobby', $(this).parent().find('td').first().text()));
+								wsClientLobby.send(packArguments('joinLobby', $(this).find('td').first().text()));
 								break;
 							default:
 								if(connectedClient){
@@ -1248,8 +1255,6 @@ var wsClientLobby;
 
 		function setupWebLobbySocket(){
 			wsClientLobby = new WebSocket("ws://dotahost.net:2075");
-
-			window.fuk = function(){wsClientLobby.send('startGames');};
 
 			wsClientLobby.sendReal = wsClientLobby.send;
 			wsClientLobby.send = function(string){
@@ -1472,78 +1477,6 @@ var wsClientLobby;
 					)
 				)
 			);
-			$('#createLobbyOptionsCreate').click(function(){
-				if(user == null){
-					alert('Please log in.');
-				}
-				if(!gameInfoPatched){
-					alert('Please patch gameinfo.txt (settings).');
-				}
-				var settingsBody = $('#createLobbyBody');
-
-				var lobby = {};
-				var addon = {};
-				addon[ADDON_ID] = "lod";
-				addon[ADDON_OPTIONS] = {};
-				settingsBody.find('select, input').each(function(){
-					var e = $(this);
-					addon[ADDON_OPTIONS][e.attr('id')] = e.val() == 'on' ? ''+(~~e.is(':checked')) : e.val();
-				});
-
-				var addons = {"0":addon};
-
-				var team1 = {};
-				team1[TEAM_NAME] = "Radiant";
-				team1[TEAM_MAX_PLAYERS] = "5";
-				team1[TEAM_PLAYERS] = {};
-
-				var team2 = {};
-				team2[TEAM_NAME] = "Dire";
-				team2[TEAM_MAX_PLAYERS] = "5";
-				team2[TEAM_PLAYERS] = {};
-
-
-				var teams = {"0":team1,"1":team2};
-
-				lobby[LOBBY_NAME] = user['personaname'] + "'s Lobby";
-				lobby[LOBBY_CURRENT_PLAYERS] = "0";
-				lobby[LOBBY_MAX_PLAYERS] = "2";
-				lobby[LOBBY_REGION] = REGION_TO_ID["America"];
-				lobby[LOBBY_TEAMS] = teams;
-				lobby[LOBBY_ADDONS] = addons;
-
-				args = JSON.stringify(lobby);
-
-				var addons = lobby[LOBBY_ADDONS];
-				for(var addonKey in addons){
-					if(!addons.hasOwnProperty(addonKey)){continue;};
-					var addon = addons[addonKey];
-					switch(installedAddons[addon[ADDON_ID]]){
-						case ADDON_STATUS_ERROR:
-							alert('An unknown error has occured.');
-							break;
-						case ADDON_STATUS_MISSING:
-							alert('Please install the addon.');
-							break;
-						case ADDON_STATUS_UPDATE:
-							alert('Please update the addon.');
-							break;
-						case ADDON_STATUS_READY:
-							var msg = packArguments('createLobby', args);
-							wsClientLobby.send(msg);
-
-							$('#createLobbyOptions').modal('toggle');
-							break;
-						default:
-							if(connectedClient){
-								alert('Please install the addon.');
-							}else{
-								alert('Please run the manager.');
-							}
-							break;
-					}
-				}
-			})
 		}
 
 		function updateAutorunOption(autorun){
@@ -1592,6 +1525,91 @@ var wsClientLobby;
 			}
 			wsClientManager.send("getAddonStatus");
 		}
+
+		(function(){ // addClickHandlerToCreateLobby
+			$('#createLobbyOptionsCreate').click(function(){
+				if(user == null){
+					alert('Please log in.');
+					return;
+				}
+				if(!connectedClient){
+					alert('Please run the ModManager.');
+					return;
+				}
+				if(!gameInfoPatched){
+					alert('Please patch gameinfo.txt (settings).');
+					return;
+				}
+
+				var settingsBody = $('#createLobbyBody');
+
+				var lobby = {};
+				var addon = {};
+				addon[ADDON_ID] = "lod";
+				addon[ADDON_OPTIONS] = {};
+				settingsBody.find('select, input').each(function(){
+					var e = $(this);
+					addon[ADDON_OPTIONS][e.attr('id')] = e.val() == 'on' ? ''+(~~e.is(':checked')) : e.val();
+				});
+
+				var addons = {"0":addon};
+
+				var team1 = {};
+				team1[TEAM_NAME] = "Radiant";
+				team1[TEAM_MAX_PLAYERS] = "5";
+				team1[TEAM_PLAYERS] = {};
+
+				var team2 = {};
+				team2[TEAM_NAME] = "Dire";
+				team2[TEAM_MAX_PLAYERS] = "5";
+				team2[TEAM_PLAYERS] = {};
+
+
+				var teams = {"0":team1,"1":team2};
+
+				lobby[LOBBY_NAME] = user['personaname'] + "'s Lobby";
+				lobby[LOBBY_CURRENT_PLAYERS] = "0";
+				lobby[LOBBY_MAX_PLAYERS] = "2";
+				lobby[LOBBY_REGION] = REGION_TO_ID["America"];
+				lobby[LOBBY_TEAMS] = teams;
+				lobby[LOBBY_ADDONS] = addons;
+
+				args = JSON.stringify(lobby);
+
+				var allReady = true;
+
+				var addons = lobby[LOBBY_ADDONS];
+				for(var addonKey in addons){
+					if(!addons.hasOwnProperty(addonKey)){continue;};
+					var addon = addons[addonKey];
+					var installedAddon = installedAddons[addon[ADDON_ID]];
+					if(installedAddon != ADDON_STATUS_READY){
+						switch(installedAddon){
+							case ADDON_STATUS_READY:
+								alert('An unknown error has occured.');
+								break;
+							case ADDON_STATUS_ERROR:
+								alert('An unknown error has occured.');
+								break;
+							case ADDON_STATUS_MISSING:
+								alert('Please install ' + addon[ADDON_ID] + '.');
+								break;
+							case ADDON_STATUS_UPDATE:
+								alert('Please update ' + addon[ADDON_ID] + '.');
+								break;
+						}
+						allReady = false;
+						return;
+					}
+				}
+
+				if(allReady){
+					wsClientLobby.send(packArguments('createLobby', args));
+
+					$('#createLobbyOptions').modal('toggle');
+				}
+			});
+		})();
 
 	});
 
