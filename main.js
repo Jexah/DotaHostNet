@@ -60,7 +60,7 @@ var wsClientLobby;
 		var LOBBY_MAX_PLAYERS = "3";
 		var LOBBY_CURRENT_PLAYERS = "4";
 		var LOBBY_REGION = "5";
-		var LOBBY_ACTIVE = "6";
+		var LOBBY_STATUS = "6";
 
 		var ADDON_ID = "0";
 		var ADDON_OPTIONS = "1";
@@ -702,8 +702,8 @@ var wsClientLobby;
 						},
 						'{{5}}',
 						function(args){
-							return $('<button>').attr({'id':'leaveLobbyReconnect', 'class':'btn btn-default btn-lg', 'style':'width:100%;margin-bottom:20px;'}).text(currentLobby[LOBBY_ACTIVE] == '1'?'Reconnect':'Leave Lobby').click(function(){
-								if(currentLobby[LOBBY_ACTIVE] == '1'){
+							return $('<button>').attr({'id':'leaveLobbyReconnect', 'class':'btn btn-default btn-lg', 'style':'width:100%;margin-bottom:20px;'}).text(currentLobby[LOBBY_STATUS] == '2'?'Reconnect':'Leave Lobby').click(function(){
+								if(currentLobby[LOBBY_STATUS] == '2'){
 									location.href = "steam://connect/" + x[1];
 								}else{
 									wsClientLobby.send('leaveLobby');
@@ -782,6 +782,16 @@ var wsClientLobby;
 					case 'lobby':
 						currentLobby = JSON.parse(x[2]);
 						selectPage('lobby-' + currentLobby[LOBBY_ADDONS]['0'][ADDON_ID], currentLobby);
+						$('#leaveLobbyReconnect').off();
+						$('#leaveLobbyReconnect').click(function(){
+							if(currentLobby[LOBBY_STATUS] == '2'){
+								console.log("steam://connect/" + x[3]);
+								location.href = "steam://connect/" + x[3];
+							}else{
+								wsClientLobby.send('leaveLobby');
+								console.log("leaveLobby");
+							}
+						});
 						break;
 				}
 			},
@@ -972,9 +982,11 @@ var wsClientLobby;
 					clearTimeout(readyTimeout);
 				});
 				$('#readyAudio').get(0).play();
+				currentLobby[LOBBY_STATUS] = '1';
 			},
 			'cancelBeginGame':function(e, x){
 				console.log('START GAME CANCELED');
+				currentLobby[LOBBY_STATUS] = '0';
 			},
 			'generatingServer':function(e, x){
 				var ready = $('#ready');
@@ -986,6 +998,8 @@ var wsClientLobby;
 				readyBorder.css({'width':'550px', 'height':'110px', 'position': 'absolute', 'top':'50%','left':'50%','margin-top': '-50px','margin-left':'-275px','padding':'20px','overflow':'hidden'});
 				readyBody.css('height', '80px');
 				readyBody.children('button').css({'height':'50px', 'width':'220px'});
+
+				currentLobby[LOBBY_STATUS] = '2';
 			},
 			'invalid':function(e, c){
 				$('#invalid').modal('show');
