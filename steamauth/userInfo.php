@@ -49,5 +49,6 @@
     $steamprofile['token'] = $_SESSION['steam_token'];
     $steamprofile['badges'] = $_SESSION['steam_badges'];
     $steamprofile['cosmetics'] = $_SESSION['steam_cosmetics'];
+    $steamprofile['beta'] = $_SESSION['steam_beta'];
 ?>
 

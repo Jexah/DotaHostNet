@@ -83,7 +83,7 @@ function generateToken() {
     }
 
     // Check if the account already exists
-    $query = "SELECT avatar, personaname, profileurl, badges, cosmetics FROM steamUsers WHERE steamID=".$steamID.";";
+    $query = "SELECT avatar, personaname, profileurl, badges, cosmetics, betaUsers.steamID as beta FROM steamUsers LEFT JOIN betaUsers ON steamUsers.steamID=betaUsers.steamID WHERE steamUsers.steamID=".$steamID.";";
     if($result = $mysqli->query($query)) {
         // Does this user already exist?
         if($result->num_rows <= 0) {
@@ -95,6 +95,7 @@ function generateToken() {
             // Store badge stuff
             $_SESSION['steam_badges'] = 0;
             $_SESSION['steam_cosmetics'] = 0;
+            $_SESSION['steam_beta'] = false;
 
             // Run the query
             if($mysqli->query($query)) {
@@ -114,6 +115,18 @@ function generateToken() {
             // Store badge stuff
             $_SESSION['steam_badges'] = $row[3];
             $_SESSION['steam_cosmetics'] = $row[4];
+
+            // Store beta flag
+            if(is_null($row[5])) {
+                // Not a beta user
+                $_SESSION['steam_beta'] = false;
+
+                // Check if there are any free beta slots
+
+            } else {
+                // They are a beta user
+                $_SESSION['steam_beta'] = true;
+            }
 
             // Run the query
             if($mysqli->query($query)) {
