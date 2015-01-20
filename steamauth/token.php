@@ -21,6 +21,57 @@ function generateToken() {
     $profileurl = $mysqli->real_escape_string($_SESSION['steam_profileurl']);
 
     function updateToken($mysqli, $steamID) {
+        // Check if they are a beta user
+        if(!$_SESSION['steam_beta']) {
+            // Not a beta user
+
+            // Check if there are any free beta slots
+            try {
+                // Begin Transaction
+                $mysqli->autocommit(FALSE);
+
+                // Pull number of free slots
+                if($result = $mysqli->query('SELECT slots from betaSlots WHERE lck = 0 LIMIT 1;')) {
+                    if($result->num_rows > 0) {
+                        // Grab data
+                        $row = $result->fetch_row();
+                        $slotsLeft = $row[0];
+
+                        // Check if we have any slots left
+                        if($slotsLeft > 0) {
+                            // Lower slot count
+                            $slotsLeft -= 1;
+
+                            // Update slots count
+                            if($mysqli->query("UPDATE betaSlots SET slots=".$slotsLeft." WHERE lck = 0;")) {
+                                // Store user as a beta user
+                                if($mysqli->query("INSERT INTO betaUsers (steamID) VALUES (".$steamID.");")) {
+                                    // All is good, commit
+                                    $mysqli->commit();
+
+                                    // Store us as a beta user
+                                    $_SESSION['steam_beta'] = true;
+                                } else {
+                                    // Failure, rollback
+                                    $mysqli->rollback();
+                                }
+                            } else {
+                                // Failure, rollback
+                                $mysqli->rollback();
+                            }
+                        }
+                    }
+                }
+            } catch (Exception $e) {
+                // An exception has been thrown
+                // We must rollback the transaction
+                $mysqli->rollback();
+            } finally {
+                // End Transaction
+                $mysqli->autocommit(TRUE);
+            }
+        }
+
         // Generate a token
         $token = md5(uniqid());
         $safeToken = $mysqli->real_escape_string($token);
@@ -117,52 +168,6 @@ function generateToken() {
             if(is_null($row[5])) {
                 // Not a beta user
                 $_SESSION['steam_beta'] = false;
-
-                // Check if there are any free beta slots
-                try {
-                    // Begin Transaction
-                    $mysqli->autocommit(FALSE);
-
-                    // Pull number of free slots
-                    if($result = $mysqli->query('SELECT slots from betaSlots WHERE lck = 0 LIMIT 1;')) {
-                        if($result->num_rows > 0) {
-                            // Grab data
-                            $row = $result->fetch_row();
-                            $slotsLeft = $row[0];
-
-                            // Check if we have any slots left
-                            if($slotsLeft > 0) {
-                                // Lower slot count
-                                $slotsLeft -= 1;
-
-                                // Update slots count
-                                if($mysqli->query("UPDATE betaSlots SET slots=".$slotsLeft." WHERE lck = 0;")) {
-                                    // Store user as a beta user
-                                    if($mysqli->query("INSERT INTO betaUsers (steamID) VALUES (".$steamID.");")) {
-                                        // All is good, commit
-                                        $mysqli->commit();
-
-                                        // Store us as a beta user
-                                        $_SESSION['steam_beta'] = true;
-                                    } else {
-                                        // Failure, rollback
-                                        $mysqli->rollback();
-                                    }
-                                } else {
-                                    // Failure, rollback
-                                    $mysqli->rollback();
-                                }
-                            }
-                        }
-                    }
-                } catch (Exception $e) {
-                    // An exception has been thrown
-                    // We must rollback the transaction
-                    $mysqli->rollback();
-                } finally {
-                    // End Transaction
-                    $mysqli->autocommit(TRUE);
-                }
             } else {
                 // They are a beta user
                 $_SESSION['steam_beta'] = true;
