@@ -36,7 +36,7 @@ Templates.WsDivs = (function(){
 	return {
 
 		// This is for the mod manager
-		'local' = function(){
+		'local':function(){
 
 			// If the mod manager is not connected, and has not failed connecting
 			if(Main.connectedClient == null){
@@ -75,7 +75,7 @@ Templates.WsDivs = (function(){
 		},
 
 		// This is for the lobby manager
-		'lobby' = function(){
+		'lobby':function(){
 			// If lobby manager is not connected, and has not failed connecting
 			if(Main.connectedLobby == null){
 				return baseDiv('lmStatus', true, 'Attempting', ' to verify user profile!')

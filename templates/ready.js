@@ -81,23 +81,29 @@ Templates.Ready = (function(){
 		}
 	}
 
-	this.show = function(){
-		create();
-		if(readyButton){
-			readyButton.prop('disabled', false);
+	return{
+
+		'show':function(){
+			create();
+			if(readyButton){
+				readyButton.prop('disabled', false);
+			}
+			if(declineButton){
+				declineButton.prop('disabled', false);
+			}
+			modalInstance.modal('show');
+		},
+
+		'hide':function(){
+			modalInstance.modal('hide');
+		},
+
+		'generating':function(){
+			modalBody.html($('<h4>').text('Preparing server...'));
 		}
-		if(declineButton){
-			declineButton.prop('disabled', false);
-		}
-		modalInstance.modal('show');
-	}
 
-	this.hide = function(){
-		modalInstance.modal('hide');
 	}
+	
 
-	this.generating = function(){
-		modalBody.html($('<h4>').text('Preparing server...'));
-	}
 
-});
+})();
