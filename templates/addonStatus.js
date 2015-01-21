@@ -86,4 +86,4 @@ Templates.AddonStatus = (function(){
 		}
 	}
 
-});
+})();

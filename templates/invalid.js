@@ -1,6 +1,6 @@
 var Templates = window.Templates || {};
 
-Templates.invalid = (function(){
+Templates.Invalid = (function(){
 
 	var modal;
 
@@ -25,13 +25,18 @@ Templates.invalid = (function(){
 		}
 	}
 
-	this.show = function(){
-		create();
-		modal.modal('show');
+	return {
+
+		'show':function(){
+			create();
+			modal.modal('show');
+		},
+
+		'hide':function(){
+			modal.modal('hide');
+		}
+
 	}
 
-	this.hide = function(){
-		modal.modal('hide');
-	}
 
-});
+})();

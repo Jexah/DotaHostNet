@@ -43,7 +43,7 @@
 
 
 
-Main = function(){
+Main = new function(){
 
 	if(user != null){
 		thisPlayer[PLAYER_PROFILEURL] = user['profileurl'];
@@ -116,7 +116,7 @@ Main = function(){
 		Helpers.loadAppByUri('dotahost://', function(){
 			$('#mmStatus').replaceWith(Templates.wsDivs.local());
 			$('#addonStatusContainer').empty();
-		}
+		});
 	}
 
 
@@ -145,76 +145,19 @@ Main = function(){
 				},
 
 				'connectedToModManager':function(args){
-					if(connectedClient){
-						return ''+
-						'<div class="alert alert-success">'+
-							'<h4>ModManager</h4><span class="glyphicon glyphicon-ok" style="position:absolute;left:calc(100% - 50px);top:10px;"></span>'+
-							'<strong>Successfully</strong> connected to ModManager!'+
-						'</div>';
-					}else{
-						return ''+
-						'<div class="alert alert-info">'+
-							'<h4>ModManager!</h4><span style="position:absolute;left:calc(100% - 50px);top:-10px;">'+spinner+'</span>'+
-							'<strong>Attempting</strong> to connect to local ModManager.'+
-						'</div>';
-					}
+					return Templates.wsDivs.local();
 				},
 
 				'connectedToLobbyManager':function(args){
-					if(isVerified === null){
-						console.log('verified');
-						console.log(isVerified);
-						return ''+
-						'<div class="alert alert-info">'+
-							'<h4>LobbyManager!</h4><span style="position:absolute;left:calc(100% - 50px);top:-10px;">'+spinner+'</span>'+
-							'<strong>Attempting</strong> to connect to Dotahost LobbyManager.'+
-						'</div>';
-					}else if(!isVerified){
-						return ''+
-						'<div class="alert alert-danger">'+
-							'<h4>LobbyManager</h4><span class="glyphicon glyphicon-remove" style="position:absolute;left:calc(100% - 50px);top:10px;"></span>'+
-							'<strong>Failed</strong> to verify user profile.'+
-						'</div>';
-					}else{
-						return ''+
-						'<div class="alert alert-success">'+
-							'<h4>LobbyManager</h4><span class="glyphicon glyphicon-ok" style="position:absolute;left:calc(100% - 50px);top:10px;"></span>'+
-							'<strong>Successfully</strong> verified user profile!'+
-						'</div>';
-					}
+					return Templates.wsDivs.lobby();
 				}
 			},
 			// User is not logged in
 			[function(args) {return !args[0];},
-				'<div class="row clearfix" style="margin-top:100px;">',
-					'<div class="col-md-2 column">',
-					'</div>',
-					'<div class="col-md-8 column">',
-						'<div class="jumbotron" style="text-align:center;">',
-							'<h1>',
-								'Welcome to Dotahost',
-							'</h1>',
-							'<p>',
-								'Dota 2 Custom Games',
-							'</p>',
-							'<br />',
-							'<p>',
-								'<form action="?login" style="display:block;" method="post">{{0}}[[1]]',
-									function(args){
-										return $('<a>').attr({'class': 'btn btn-warning btn-lg', 'style': 'float:left;width:200px;display:block;margin-left:150px;margin-right:30px;', 'href': '#'}).text('What is this sorcery?').click(function(){
-											selectPage('information', []);
-										});
-									},
-									function(args){
-										return '<input style="display:block;" type="image" src="http://cdn.steamcommunity.com/public/images/signinthroughsteam/sits_large_noborder.png">';
-									},
-								'</form>',
-							'</p>',
-						'</div>',
-					'</div>',
-					'<div class="col-md-2 column">',
-					'</div>',
-				'</div>'
+				'{{0}}',
+				function(args){
+					return Templates.Landing.getPage();
+				}
 			],
 			// User is logged in
 			[function(args) {return args[0];},
@@ -245,12 +188,8 @@ Main = function(){
 					'<div class="row" style="margin-top:100px;">',
 						'<div class="col-md-9 col-lg-8 col-md-push-3 col-lg-push-2 column">',
 							'<div class="row">',
-								'<div id="localClientConnectedDiv" class="col-md-6 column">',
-									'[[connectedToModManager]]',
-								'</div>',
-								'<div id="dotahostLobbyConnectedDiv" class="col-md-6 column">',
-									'[[connectedToLobbyManager]]',
-								'</div>',
+									'{{connectedToModManager}}',
+									'{{connectedToLobbyManager}}',
 							'</div>',
 							'<div class="row">',
 								'<div class="col-md-12 column">',
@@ -274,9 +213,6 @@ Main = function(){
 											});
 										},
 									'</h3>',
-								'</div>',
-								'<div class="col-md-6 column" style="text-align:right;">',
-									 '',
 								'</div>',
 							'</div>',
 							'<div class="row">',
@@ -516,7 +452,7 @@ Main = function(){
 				var slotid = x[1];
 				var teamid = x[2];
 				removePlayerFromTeam(slotid, currentLobby.Teams[teamid], teamid, teamid == '2');
-				$('#ready').modal('hide');
+				Templates.Ready.hide();
 			}
 		},
 		'chat':function(e, x){
@@ -602,7 +538,7 @@ Main = function(){
 				location.href = "steam://connect/" + x[1];
 			});
 			location.href = "steam://connect/" + x[1];
-			$('#ready').modal('hide');
+			Templates.Ready.hide()
 		},
 
 		'gameServerInfo':function(e, x){
@@ -652,17 +588,9 @@ Main = function(){
 	}
 
 	function addChat(chatContainerElement, personaname, text, cosmetics){
-		var scrollDown = chatContainerElement.scrollTop() + chatContainerElement.innerHeight() + 10 >= chatContainerElement.prop('scrollHeight');
-		chatContainerElement.append(
-			$('<span>').attr({'style':'white-space:nowrap;display:block;width:100%;', 'class':COSMETICS[''+cosmetics]}).append(
-				$('<strong>').text(personaname + ': ')
-			).append(
-				$('<span>').text(text).attr('style', 'white-space:normal;word-wrap:break-word;')
-			).append('<br />')
-		);
-		if(scrollDown){
-			chatContainerElement.scrollTop(chatContainerElement.prop('scrollHeight'));
-		}
+		
+		
+		
 	}
 
 	function addPlayerToTeamList(listGroup, team_players, unallocated, teamid, slotid, avatarLeft){
@@ -760,35 +688,39 @@ Main = function(){
 				if(lobbiesChangedTimeout){
 					return;
 				}
-				if(!gameInfoPatched){
-					alert('Please patch gameinfo (in settings).');
-				}
-				var addons = lobbies[lobbyName].Addons;
-				for(var addonKey in addons){
-					if(!addons.hasOwnProperty(addonKey)){continue;};
-					var addon = addons[addonKey];
-					switch(installedAddons[addon.Id]){
-						case ADDON_STATUS_ERROR:
-							alert('An unknown error has occured.');
-							break;
-						case ADDON_STATUS_MISSING:
-							alert('Please install the addon.');
-							break;
-						case ADDON_STATUS_UPDATE:
-							alert('Please update the addon.');
-							break;
-						case ADDON_STATUS_READY:
-							wsClientLobby.send(packArguments('joinLobby', $(this).find('td').first().text()));
-							break;
-						default:
-							if(connectedClient){
-								alert('Please install the addon.');
-							}else{
-								alert('Please run the manager.');
-							}
-							break;
+				wsClientManager.send('getPatchGameInfo');
+				setTimeout(function(){
+					if(!gameInfoPatched){
+						alert('Please patch gameinfo (in settings).');
 					}
-				}
+					var addons = lobbies[lobbyName].Addons;
+					for(var addonKey in addons){
+						if(!addons.hasOwnProperty(addonKey)){continue;};
+						var addon = addons[addonKey];
+						switch(installedAddons[addon.Id]){
+							case ADDON_STATUS_ERROR:
+								alert('An unknown error has occured.');
+								break;
+							case ADDON_STATUS_MISSING:
+								alert('Please install the addon.');
+								break;
+							case ADDON_STATUS_UPDATE:
+								alert('Please update the addon.');
+								break;
+							case ADDON_STATUS_READY:
+								wsClientLobby.send(packArguments('joinLobby', $(this).find('td').first().text()));
+								break;
+							default:
+								if(connectedClient){
+									alert('Please install the addon.');
+								}else{
+									alert('Please run the manager.');
+								}
+								break;
+						}
+					}
+				}, 200);
+				
 			});
 			tbody.append(tr);
 		}
@@ -1270,139 +1202,6 @@ Main = function(){
 		});
 	})();
 
-	
-};
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-$(document).ready(function(){
-
-
-	// Message seperator
-	var MSG_SEP = String.fromCharCode(0);
-
-
-	var ADDON_ID = "0";
-	var ADDON_OPTIONS = "1";
-
-	var TEAM_NAME = "0";
-	var TEAM_MAX_PLAYERS = "1";
-	var TEAM_PLAYERS = "2";
-
-	var PLAYER_STEAMID = "0";
-	var PLAYER_PERSONANAME = "1";
-	var PLAYER_AVATAR = "2";
-	var PLAYER_PROFILEURL = "3";
-	var PLAYER_BADGES = "4";
-	var PLAYER_COSMETICS = "5";
-
-	var ADDON_STATUS_ERROR = "0";
-	var ADDON_STATUS_MISSING = "1";
-	var ADDON_STATUS_UPDATE = "2";
-	var ADDON_STATUS_READY = "3";
-
-	var BADGES_TEXT = 0;
-	var BADGES_CLASS = 1;
-
-	var BADGES = [
-		[
-			'Veteran',
-			'Member',
-			'Donor',
-			'Volunteer',
-			'Warning',
-			'Admin'
-		],
-		[
-			'label label-default',
-			'label label-primary',
-			'label label-success',
-			'label label-info',
-			'label label-warning',
-			'label label-danger'
-		]
-	];
-
-	var COSMETICS = {
-		'0':'',
-		'1':' list-group-item-success',
-		'2':' list-group-item-info',
-		'3':' list-group-item-warning',
-		'4':' list-group-item-danger'
-	}
-
-	var TRANSPARENT_IMAGE = 'http://upload.wikimedia.org/wikipedia/commons/c/ce/Transparent.gif';
-
-	var currentPage = 'home';
-	var lobbies = {};
-	var currentLobby = {};
-	var installedAddons = {};
-	var currentTeamID = '';
-	var currentPlayerID = '';
-	var thisPlayer = {};
-	var hasRequestedSetDotaPath = false;
-
-	var gameInfoPatched = null;
-
-	var lobbiesChangedTimeout = false;
-
-	var downloadStarted = { 'lod': false };
-
-	var wsClientManager;
-	var wsClientLobby;
-
-
-
-	if(user != null){
-		thisPlayer[PLAYER_PROFILEURL] = user['profileurl'];
-		thisPlayer[PLAYER_AVATAR] = user['avatarmedium'];
-		thisPlayer[PLAYER_PERSONANAME] = user['personaname'];
-		thisPlayer[PLAYER_STEAMID] = user['steamid'];
-	}
-
-	var autorun = null;
-	var connectedLobby = false;
-	var connectedClient = false;
-
-
-	// Will contain the function to select pages
-	var selectPage;
-
-	var launchModManagerTimeout = null;
-
-	// Whether we have been verified or not
-	var isVerified = null;
-
-
-
 	// args is an array of arguments
 	// funcs is an an object containing reusable functions
 	var Template = function(args, funcs){
@@ -1626,385 +1425,7 @@ $(document).ready(function(){
 
 		}
 	};
-
-	// Packs arguments
-	function packArguments() {
-		// Build args array
-		var args = [];
-		for(var i=0; i<arguments.length; i++) args.push(arguments[i]);
-
-		return args.join(MSG_SEP);
-	}
-
-	var templates = {
-
-		// Home page [isLoggedIn:bool, connectedClient:bool, connectedLobby:bool]
-		'home':new Template([
-			{
-				// This will make a given element invisible if the user isn't verified
-				'isVerified': function(args) {
-					if(!isVerified) {
-						return 'style="display:none;"';
-					}
-				},
-
-				// This will make the given element invisible if the user is verified
-				'notVerified': function(args) {
-					if(isVerified) {
-						return 'style="display:none;"';
-					}
-				},
-
-				// Returns the user's avatar
-				'avatar':function(args) {
-					return user['avatar'];
-				},
-
-				'connectedToModManager':function(args){
-					if(connectedClient){
-						return ''+
-						'<div class="alert alert-success">'+
-							'<h4>ModManager</h4><span class="glyphicon glyphicon-ok" style="position:absolute;left:calc(100% - 50px);top:10px;"></span>'+
-							'<strong>Successfully</strong> connected to ModManager!'+
-						'</div>';
-					}else{
-						return ''+
-						'<div class="alert alert-info">'+
-							'<h4>ModManager!</h4><span style="position:absolute;left:calc(100% - 50px);top:-10px;">'+spinner+'</span>'+
-							'<strong>Attempting</strong> to connect to local ModManager.'+
-						'</div>';
-					}
-				},
-
-				'connectedToLobbyManager':function(args){
-					if(isVerified === null){
-						console.log('verified');
-						console.log(isVerified);
-						return ''+
-						'<div class="alert alert-info">'+
-							'<h4>LobbyManager!</h4><span style="position:absolute;left:calc(100% - 50px);top:-10px;">'+spinner+'</span>'+
-							'<strong>Attempting</strong> to connect to Dotahost LobbyManager.'+
-						'</div>';
-					}else if(!isVerified){
-						return ''+
-						'<div class="alert alert-danger">'+
-							'<h4>LobbyManager</h4><span class="glyphicon glyphicon-remove" style="position:absolute;left:calc(100% - 50px);top:10px;"></span>'+
-							'<strong>Failed</strong> to verify user profile.'+
-						'</div>';
-					}else{
-						return ''+
-						'<div class="alert alert-success">'+
-							'<h4>LobbyManager</h4><span class="glyphicon glyphicon-ok" style="position:absolute;left:calc(100% - 50px);top:10px;"></span>'+
-							'<strong>Successfully</strong> verified user profile!'+
-						'</div>';
-					}
-				}
-			},
-			// User is not logged in
-			[function(args) {return !args[0];},
-				'<div class="row clearfix" style="margin-top:100px;">',
-					'<div class="col-md-2 column">',
-					'</div>',
-					'<div class="col-md-8 column">',
-						'<div class="jumbotron" style="text-align:center;">',
-							'<h1>',
-								'Welcome to Dotahost',
-							'</h1>',
-							'<p>',
-								'Dota 2 Custom Games',
-							'</p>',
-							'<br />',
-							'<p>',
-								'<form action="?login" style="display:block;" method="post">{{0}}[[1]]',
-									function(args){
-										return $('<a>').attr({'class': 'btn btn-warning btn-lg', 'style': 'float:left;width:200px;display:block;margin-left:150px;margin-right:30px;', 'href': '#'}).text('What is this sorcery?').click(function(){
-											selectPage('information', []);
-										});
-									},
-									function(args){
-										return '<input style="display:block;" type="image" src="http://cdn.steamcommunity.com/public/images/signinthroughsteam/sits_large_noborder.png">';
-									},
-								'</form>',
-							'</p>',
-						'</div>',
-					'</div>',
-					'<div class="col-md-2 column">',
-					'</div>',
-				'</div>'
-			],
-			// User is logged in
-			[function(args) {return args[0];},
-				// User is banned
-				[function(args) {return user && user.banreason;},
-					'<div class="row">',
-						'<div class="col-md-3 column">',
-						'</div>',
-						'<div class="col-md-6 column">',
-							'{{0}}{{1}}',
-							function(args){
-								return user.banreason;
-							},
-							function(args){
-								return $('<button>').attr({'type':'button', 'style':'float:right;', 'class':'btn btn-primary btn-warning'}).text('Logout').click(function(){
-									location.href = 'logout.php';
-								});
-							},
-						'</div>',
-					'</div>'
-				],
-
-				// User is white listed
-				[function(args) {return user && user.whitelisted && !user.banreason;},
-					'<span class="glyphicon glyphicon-remove" style="visibility:hidden;"></span>',
-					'<span class="glyphicon glyphicon-ok" style="visibility:hidden;"></span>',
-					'<span class="glyphicon glyphicon-download-alt" style="visibility:hidden;"></span>',
-					'<div class="row" style="margin-top:100px;">',
-						'<div class="col-md-9 col-lg-8 col-md-push-3 col-lg-push-2 column">',
-							'<div class="row">',
-								'<div id="localClientConnectedDiv" class="col-md-6 column">',
-									'[[connectedToModManager]]',
-								'</div>',
-								'<div id="dotahostLobbyConnectedDiv" class="col-md-6 column">',
-									'[[connectedToLobbyManager]]',
-								'</div>',
-							'</div>',
-							'<div class="row">',
-								'<div class="col-md-12 column">',
-									'<h3 class="text-left">',
-										'<span style="float:left;">Lobbies</span>{{0}}',
-										function(args){
-											return $('<button>').attr({'type':'button', 'style':'float:right;margin-left:5px;', 'class':'btn btn-primary', 'data-toggle':'modal', 'data-target':'#createLobbyOptions'}).text('Create Lobby').click(function(){
-												refreshCreateLobbyModal();
-											});
-										},
-										'{{1}}',
-										function(args){
-											return $('<button>').attr({'type':'button', 'style':'float:right;margin-left:5px;', 'class':'btn btn-info', 'data-toggle':'modal', 'data-target':'#settings'}).text('Settings').click(function(){
-												openSettingsModal();
-											});
-										},
-										'{{2}}',
-										function(args){
-											return $('<button>').attr({'type':'button', 'style':'float:right;', 'class':'btn btn-primary btn-warning'}).text('Logout').click(function(){
-												location.href = 'logout.php';
-											});
-										},
-									'</h3>',
-								'</div>',
-								'<div class="col-md-6 column" style="text-align:right;">',
-									 '',
-								'</div>',
-							'</div>',
-							'<div class="row">',
-								'<div id="homeLobbiesTable" class="col-md-12 column">',
-									'<span style="margin-left:50px;">'+spinner+'</span>',
-								'</div>',
-							'</div>',
-						'</div>',
-						'<div id="addonStatusContainer" class="col-md-3 col-lg-2 col-md-pull-9 col-lg-pull-8 column"></div>',
-						'<div class="col-md-0 col-lg-2 column">',
-						'</div>',
-					'</div>'
-				],
-
-				// User is white NOT listed
-				[function(args) {return !user || (!user.whitelisted && !user.banreason);},
-					'<div class="row">',
-						'<div class="col-md-3 column">',
-						'</div>',
-						'<div class="col-md-6 column">',
-							'<h1>Rats!</h1>',
-							'<p>You\'re not a beta participant :(</p>',
-							'{{1}}',
-							function(args){
-								return $('<button>').attr({'type':'button', 'style':'float:right;', 'class':'btn btn-primary btn-warning'}).text('Logout').click(function(){
-									location.href = 'logout.php';
-								});
-							},
-						'</div>',
-					'</div>'
-				]
-			]
-		]),
-
-		'lobby-lod': new Template ([
-			{
-				'lobbyName':function(args){
-					return args[LOBBY_NAME];
-				},
-
-				'lobbyAddons':function(args){
-					var addons = '';
-					for(var addonKey in args[LOBBY_ADDONS]){
-						var addon = args[LOBBY_ADDONS][addonKey];
-						addons += addon[ADDON_ID] + ', ';
-					}
-					addons = addons.substring(0, addons.length - 2);
-					return addons;
-				}
-			},
-			'<div class="row clearfix">',
-				'<div class="col-xl-2 col-lg-0 col-md-0 col-sm-0 column"></div>',
-				'<div class="col-xl-8 col-lg-12 col-md-12 col-sm-12 column">',
-					'<div class="row clearfix">',
-						'<div class="col-md-6 col-sm-6 column">',
-							'<h1>[[lobbyName]]</h1>',
-						'</div>',
-						'<div class="col-md-6 col-sm-6 column">',
-							'<h2 style="text-align:right;">Legends of Dota</h2>',
-						'</div>',
-					'</div>',
-				'</div>',
-				'<div class="col-xl-2 col-lg-0 col-md-0 col-sm-0 column"></div>',
-			'</div>',
-			'<div class="row clearfix">',
-				'<div class="col-lg-0 col-md-0 col-sm-0 column col-xl-2"></div>',
-				'<div style="padding:0 5px" class="col-lg-6 col-md-6 col-sm-6 col-xs-12 column col-xl-4">',
-					'{{0}}',
-					function(args){
-						var teamID = '0';
-						var teams = args[LOBBY_TEAMS];
-						var team = teams[teamID];
-						var players = team[TEAM_PLAYERS];
-
-						var listGroup = $('<div>').attr({'id':'teamList'+teamID, 'class':'list-group'})
-							.append($('<a>').attr({'style':'cursor:default;', 'class':'list-group-item disabled'})
-								.html('<h4>'+team[TEAM_NAME]+'</h4>').click(function(e){
-									e.preventDefault();
-								})
-							);
-						for(var i = 0; i < 5; ++i){
-							addPlayerToTeamList(listGroup, players, team, teamID, ''+i, true);
-						}
-						return listGroup;
-					},
-				'</div>',
-				'<div style="padding:0 5px" class="col-lg-6 col-md-6 col-sm-6 col-xs-12 column col-xl-4">',
-					'{{2}}',
-					function(args){
-						var teamID = '1';
-						var teams = args[LOBBY_TEAMS];
-						var team = teams[teamID];
-						var players = team[TEAM_PLAYERS];
-
-						var listGroup = $('<div>').attr({'id':'teamList'+teamID, 'class':'list-group', 'style':'text-align:right;'})
-							.append($('<a>').attr({'style':'cursor:default;', 'class':'list-group-item disabled'})
-								.html('<h4>'+team[TEAM_NAME]+'</h4>').click(function(e){
-									e.preventDefault();
-								})
-							);
-						for(var i = 0; i < 5; ++i){
-							addPlayerToTeamList(listGroup, players, team, teamID, ''+i, false);
-						}
-						return listGroup;
-					},
-				'</div>',
-				'<div class="col-lg-0 col-md-0 col-sm-0 column col-xl-2"></div>',
-			'</div>',
-			'<div class="row clearfix">',
-				'<div class="col-lg-0 col-md-0 col-sm-0 column col-xl-2"></div>',
-				'<div class="col-lg-8 col-md-8 col-sm-8 column col-xl-6">',
-					'<div class="well well-sm" style="height:300px;">',
-						'<div id="lodLobbyChat" style="width:100%;height:calc(100% - 24px);overflow-y:auto;">',
-						'</div>',
-						'<div class="input-group" style="margin:0 -11px 0 -10px;">',
-							'{{4}}',
-							function(args){
-								return $('<input>').attr({'id':'lodLobbyChatText', 'type':'text', 'class':'form-control', 'style':'-webkit-border-top-left-radius:0;-moz-border-radius-topleft:0;border-top-left-radius:0;'}).keyup(function(event){
-									if(event.keyCode == 13){
-										$('#lodLobbyChatButton').click();
-									}
-								});
-							},
-							'<span class="input-group-btn">',
-								'{{3}}',
-								function(args){
-									return $('<button>').attr({'id':'lodLobbyChatButton', 'onfocus':'$("#lodLobbyChatText").focus();', 'tabindex':'-1', 'class':'btn btn-default', 'type':'button', 'style':'-webkit-border-top-right-radius:0;-moz-border-radius-topright:0;border-top-right-radius:0;'}).text('Send').click(function(){
-										var chatTextElement = $('#lodLobbyChatText')
-										var chatText = chatTextElement.val();
-										if(chatText != ''){
-											addChat($('#lodLobbyChat'), user['personaname'], chatText, user['cosmetics']);
-											wsClientLobby.send(packArguments('chat', chatText));
-											chatTextElement.val('');
-										}
-									});
-								},
-							'</span>',
-						'</div>',
-					'</div>',
-				'</div>',
-				'<div class="col-lg-4 col-md-4 col-sm-4 column col-xl-2">',
-					'{{6}}',
-					function(args){
-						return $('<button>').attr({'class':'btn btn-success btn-lg', 'style':'width:100%;margin-bottom:20px;'}).text('Start Game').click(function(){
-							wsClientLobby.send('startGame');
-						});
-					},
-					'{{5}}',
-					function(args){
-						return $('<button>').attr({'id':'leaveLobbyReconnect', 'class':'btn btn-default btn-lg', 'style':'width:100%;margin-bottom:20px;'}).text(currentLobby[LOBBY_STATUS] == '2'?'Reconnect':'Leave Lobby').click(function(){
-							if(currentLobby[LOBBY_STATUS] == '2'){
-								location.href = "steam://connect/" + x[1];
-							}else{
-								wsClientLobby.send('leaveLobby');
-							}
-						});
-					},
-					'{{1}}',
-					function(args){
-						var teamID = '2';
-						var teams = args[LOBBY_TEAMS];
-						var team = teams[teamID];
-						var players = team[TEAM_PLAYERS];
-
-						var listGroup = $('<div>').attr({'id':'teamList'+teamID, 'class':'list-group', 'style':'text-align:right;'})
-							.append($('<a>').attr({'style':'cursor:default;', 'class':'list-group-item disabled'})
-								.html('<h4>'+team[TEAM_NAME]+'</h4>').click(function(e){
-									e.preventDefault();
-								})
-							);
-						for(var playerKey in players){
-							addPlayerToTeamList(listGroup, players, team, teamID, playerKey, true);
-						}
-						return listGroup;
-					},
-				'</div>',
-				'<div class="col-lg-0 col-md-0 col-sm-0 column col-xl-2"></div>',
-			'</div>'
-		])
-	};
-
-});
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+};
 
 
 
