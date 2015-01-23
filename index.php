@@ -26,7 +26,7 @@
 		badges: <?php echo($steamprofile['badges']); ?>,
 		cosmetics: <?php echo($steamprofile['cosmetics']); ?>,
 		beta: <?php echo(var_export($steamprofile['beta'])); ?>
-
+ 
 		<?php
 			// Check bans
 			if(isset($_SESSION['steam_banexpiration'])) {
