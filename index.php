@@ -1,6 +1,6 @@
 <?php
-	if(file_exists('maintenance.php')) {
-		header("Location: http://dotahost.net/maintenance.php");
+	if(file_exists('maintenance.php') && $_SERVER['REMOTE_ADDR'] != '***REMOVED***') {
+		header("Location: http://$_SERVER[HTTP_HOST]/maintenance.php");
 		die();
 	}
 ?>
@@ -77,6 +77,7 @@
 		<link rel="stylesheet" href="main.css">
 
 		<title>DotaHost.Net</title>
+		
 	</head>
 	<body>
 		<div id="settings" class="modal fade">
@@ -110,35 +111,43 @@
 				</div>
 			</div>
 		</div>
-		<div id="ready" class="modal fade" data-backdrop="static" style="">
-			<div id="readyBorder" class="modal-dialog">
-				<div class="modal-content">
-					<div id="readyBody" class="modal-body">
-					</div>
-				</div>
-			</div>
-		</div>
-		<div id="invalid" class="modal fade" data-backdrop="static" style="">
-			<div class="modal-dialog">
-				<div class="modal-content">
-					<div class="modal-body">
-						You have opened DotaHost in another tab.
-					</div>
-				</div>
-			</div>
-		</div>
 		<div id="main" class="container-fluid"></div>
 		<iframe id="go" style="display:none"></iframe>
-		<script>
-			if(user != null){
-				history.pushState({}, "", "/");
-			}
-		</script>
+
+		<script>alert('wtf');</script>
+
 		<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
 		<!-- Latest compiled and minified JavaScript -->
 		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>
+
+		<script src="templates/addon.js"></script>
+		<script src="templates/addonStatus.js"></script>
+		<script src="templates/chat.js"></script>
+		<script src="templates/cosmetics.js"></script>
+
+		<script src="templates/helpers.js"></script>
+
+		<script src="templates/invalid.js"></script>
+
+		<script src="templates/lobbies.js"></script>
+
+
+		<script src="templates/lobby.js"></script>
+		<script src="templates/lobbyButtons.js"></script>
+
+		<script src="templates/player.js"></script>
+		<script src="templates/ready.js"></script>
+
+		<script src="templates/spinner.js"></script>
+		<script src="templates/team.js"></script>
+		<script src="templates/wsdivs.js"></script>
+
+		<script src="templates/landing.js"></script>
+
 		<script src="main.js"></script>
+
+
 		<audio id="readyAudio" src="ready.wav" preload="auto" volume="1.0"></audio>
 	</body>
 </html>
