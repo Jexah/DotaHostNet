@@ -13,7 +13,7 @@ Templates.WsDivs = (function(){
 			$('<h4>').text('ModManager')
 		).append(
 			// Add glyphicon/spinner
-			$('<span>').attr({'class':(okay != null'glyphicon glyphicon-'+(okay?'ok':'remove'):''), 'style':'position:absolute;left:calc(100% - 50px);top:10px;'}).text((okay==null?Templates.spinner:''));
+			$('<span>').attr({'class':(okay != null?'glyphicon glyphicon-'+(okay?'ok':'remove'):''), 'style':'position:absolute;left:calc(100% - 50px);top:10px;'}).text((okay==null?Templates.spinner:''))
 		).append(
 			// Add first word of desctiption
 			$('<strong>').html(strong)
