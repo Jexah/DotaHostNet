@@ -21,6 +21,57 @@ function generateToken() {
     $profileurl = $mysqli->real_escape_string($_SESSION['steam_profileurl']);
 
     function updateToken($mysqli, $steamID) {
+        // Check if they are a beta user
+        if(!$_SESSION['steam_beta']) {
+            // Not a beta user
+
+            // Check if there are any free beta slots
+            try {
+                // Begin Transaction
+                $mysqli->autocommit(FALSE);
+
+                // Pull number of free slots
+                if($result = $mysqli->query('SELECT slots from betaSlots WHERE lck = 0 LIMIT 1;')) {
+                    if($result->num_rows > 0) {
+                        // Grab data
+                        $row = $result->fetch_row();
+                        $slotsLeft = $row[0];
+
+                        // Check if we have any slots left
+                        if($slotsLeft > 0) {
+                            // Lower slot count
+                            $slotsLeft -= 1;
+
+                            // Update slots count
+                            if($mysqli->query("UPDATE betaSlots SET slots=".$slotsLeft." WHERE lck = 0;")) {
+                                // Store user as a beta user
+                                if($mysqli->query("INSERT INTO betaUsers (steamID) VALUES (".$steamID.");")) {
+                                    // All is good, commit
+                                    $mysqli->commit();
+
+                                    // Store us as a beta user
+                                    $_SESSION['steam_beta'] = true;
+                                } else {
+                                    // Failure, rollback
+                                    $mysqli->rollback();
+                                }
+                            } else {
+                                // Failure, rollback
+                                $mysqli->rollback();
+                            }
+                        }
+                    }
+                }
+            } catch (Exception $e) {
+                // An exception has been thrown
+                // We must rollback the transaction
+                $mysqli->rollback();
+            } finally {
+                // End Transaction
+                $mysqli->autocommit(TRUE);
+            }
+        }
+
         // Generate a token
         $token = md5(uniqid());
         $safeToken = $mysqli->real_escape_string($token);
@@ -83,7 +134,7 @@ function generateToken() {
     }
 
     // Check if the account already exists
-    $query = "SELECT avatar, personaname, profileurl, badges, cosmetics FROM steamUsers WHERE steamID=".$steamID.";";
+    $query = "SELECT avatar, personaname, profileurl, badges, cosmetics, betaUsers.steamID as beta FROM steamUsers LEFT JOIN betaUsers ON steamUsers.steamID=betaUsers.steamID WHERE steamUsers.steamID=".$steamID.";";
     if($result = $mysqli->query($query)) {
         // Does this user already exist?
         if($result->num_rows <= 0) {
@@ -95,6 +146,7 @@ function generateToken() {
             // Store badge stuff
             $_SESSION['steam_badges'] = 0;
             $_SESSION['steam_cosmetics'] = 0;
+            $_SESSION['steam_beta'] = false;
 
             // Run the query
             if($mysqli->query($query)) {
@@ -108,12 +160,21 @@ function generateToken() {
             // User exists, grab data
             $row = $result->fetch_row();
 
-            // Update their fields
-            $query = "UPDATE steamUsers SET avatar='".$avatar."', personaname='".$personaname."', profileurl='".$profileurl."' WHERE steamID=".$steamID;
-
             // Store badge stuff
             $_SESSION['steam_badges'] = $row[3];
             $_SESSION['steam_cosmetics'] = $row[4];
+
+            // Store beta flag
+            if(is_null($row[5])) {
+                // Not a beta user
+                $_SESSION['steam_beta'] = false;
+            } else {
+                // They are a beta user
+                $_SESSION['steam_beta'] = true;
+            }
+
+            // Update their fields
+            $query = "UPDATE steamUsers SET avatar='".$avatar."', personaname='".$personaname."', profileurl='".$profileurl."' WHERE steamID=".$steamID;
 
             // Run the query
             if($mysqli->query($query)) {

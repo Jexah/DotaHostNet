@@ -21,7 +21,7 @@
         $token = $mysqli->real_escape_string($_GET['token']);
 
         // Create query
-        $query = "SELECT avatar, personaname, profileurl, badges, cosmetics FROM steamUsers NATURAL JOIN sessionKeys WHERE sessionKeys.steamID = '".$steamID."' AND token = '".$token."'";
+        $query = "SELECT avatar, personaname, profileurl, badges, cosmetics, betaUsers.steamID as beta FROM steamUsers NATURAL JOIN sessionKeys LEFT JOIN betaUsers ON steamUsers.steamID=betaUsers.steamID WHERE sessionKeys.steamID = '".$steamID."' AND token = '".$token."'";
 
         // Run the query
         $result = $mysqli->query($query);
@@ -29,12 +29,8 @@
 
         // Check if we found any
         if($row) {
-            // Grab the whitelist
-            $whitelist = json_decode(file_get_contents('beta/whitelist.json'));
-            $whitelisted = $whitelist != NULL && isset($whitelist->$steamID);
-
-            // Check if the user is white listed
-            if($whitelisted) {
+            // Check if they are a beta user
+            if(!is_null($row[5])) {
                 // Check bans
                 $query = "SELECT expiration, reason FROM bans WHERE steamID=".$steamID." AND NOW() < expiration LIMIT 1;";
                 if($result = $mysqli->query($query)) {

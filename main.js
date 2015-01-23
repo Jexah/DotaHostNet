@@ -407,7 +407,7 @@ $(document).ready(function(){
 					],
 
 					// User is white listed
-					[function(args) {return user && user.whitelisted && !user.banreason;},
+					[function(args) {return user && user.beta && !user.banreason;},
 						'<span class="glyphicon glyphicon-remove" style="visibility:hidden;"></span>',
 						'<span class="glyphicon glyphicon-ok" style="visibility:hidden;"></span>',
 						'<span class="glyphicon glyphicon-download-alt" style="visibility:hidden;"></span>',
@@ -450,7 +450,7 @@ $(document).ready(function(){
 					],
 
 					// User is white NOT listed
-					[function(args) {return !user || (!user.whitelisted && !user.banreason);},
+					[function(args) {return !user || (!user.beta && !user.banreason);},
 						'<div class="row">',
 							'<div class="col-md-3 column">',
 							'</div>',
@@ -1119,8 +1119,8 @@ $(document).ready(function(){
 
 		selectPage('home', [user != null]);
 
-		// Load up the website if they are whitelisted, and not banned
-		if(user != null && user.whitelisted && !user.banreason){
+		// Load up the website if they are in the beta, and not banned
+		if(user != null && user.beta && !user.banreason){
 			setTimeout(setupClientSocket, 1000);
 			setTimeout(setupWebLobbySocket, 1000);
 		}
