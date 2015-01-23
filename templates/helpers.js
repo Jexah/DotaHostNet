@@ -8,7 +8,7 @@ Helpers = {
 		return args.join(MSG_SEP);
 	},
 
-	'loadAppByUri':function(appUri, foundFunc, notFoundFunc, default){
+	'loadAppByUri':function(appUri, foundFunc, notFoundFunc, foundOrNotFound){
 		var goToAppPage = null;
 		var waiting = true;
 
@@ -23,6 +23,7 @@ Helpers = {
 			waiting = false;
 			clearEvents();
 			appWasFound();
+			foundOrNotFound();
 		}
 
 		var appWasNotFound = function( event ){
@@ -31,6 +32,7 @@ Helpers = {
 			}
 			waiting = false;
 			appWasNotFound();
+			foundOrNotFound();
 		};
 
 		var setEvents = function() {
@@ -53,5 +55,16 @@ Helpers = {
 			appWasNotFound,
 			1000
 		);
+	},
+
+	'each':function(obj, func){
+		var i = 0;
+		var keys = Object.keys(obj);
+		var len = obj.length;
+		for(; i < len; i+=1){
+			var key = keys[i];
+			var value = obj[key];
+			func(key, value, i);
+		}
 	}
 }

@@ -2,11 +2,11 @@ Lobby = function(lobby){
 
 	var Name = '0';
 	var Teams = '1';
-	var Addons:'2';
-	var MaxPlayers:'3';
-	var CurrentPlayers:'4';
-	var Region:'5';
-	var Status:'6';
+	var Addons = '2';
+	var MaxPlayers = '3';
+	var CurrentPlayers = '4';
+	var Region = '5';
+	var Status = '6';
 
 	var obj = (typeof lobby === 'string') ? JSON.parse(lobby) : lobby;
 

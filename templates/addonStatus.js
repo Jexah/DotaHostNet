@@ -2,7 +2,12 @@ var Templates = window.Templates || {};
 
 Templates.AddonStatus = (function(){
 
-	var baseDiv = function(id, alertStyle, cursor, glyphicon, click){
+	var addonStatusContainer = $('<div>').attr({
+		'id':'addonStatusContainer',
+		'class':'col-md-3 col-lg-2 col-md-pull-9 col-lg-pull-8 column'
+	});
+
+	var baseAddonDiv = function(id, alertStyle, cursor, glyphicon, click){
 		var rootDiv = $('<div>').attr({
 			'id':id + 'Status',
 			'class':'bs-callout bs-callout-' + alertStyle + ' col-sm-4 col-md-12',
@@ -21,7 +26,7 @@ Templates.AddonStatus = (function(){
 						'aria-valuemin':'0',
 						'aria-valuemax':'100',
 						'style':'width: 0%'
-					});
+					})
 				)
 			:
 				$('<h4>').attr('style', 'width:100%;').text('Legends of Dota ').append(
@@ -37,52 +42,63 @@ Templates.AddonStatus = (function(){
 			rootDiv.click(click);
 		}
 
-		var getDownloading = fuction(id){
-			return baseDiv(id, 'info', 'wait', false);
-		}
-		var getWaiting = fuction(id){
-			return baseDiv(id, 'info', 'default', 'spinner');
-		}
-		var getMissing = fuction(id){
-			return baseDiv(id, 'danger', 'pointer', 'download-alt', function(e){
-				Main.wsClientManager.send(packArguments('update', 'lod'));
-			});
-		}
-		var getUpdate = fuction(id){
-			return baseDiv(id, 'warning', 'pointer', 'download-alt', function(e){
-				Main.wsClientManager.send(packArguments('update', 'lod'));
-			});
-		}
-		var getReady = fuction(id){
-			return baseDiv(id, 'success', 'default', 'ok');
-		}
-
 		return rootDiv;
 	}
 
+	var getDownloading = function(id){
+		return baseAddonDiv(id, 'info', 'wait', false);
+	}
+	var getWaiting = function(id){
+		return baseAddonDiv(id, 'info', 'default', 'spinner');
+	}
+	var getMissing = function(id){
+		return baseAddonDiv(id, 'danger', 'pointer', 'download-alt', function(e){
+			Main.wsClientManager.send(packArguments('update', 'lod'));
+		});
+	}
+	var getUpdate = function(id){
+		return baseAddonDiv(id, 'warning', 'pointer', 'download-alt', function(e){
+			Main.wsClientManager.send(packArguments('update', 'lod'));
+		});
+	}
+	var getReady = function(id){
+		return baseAddonDiv(id, 'success', 'default', 'ok');
+	}
+
+	var getAddon = function(id, downloading){
+		if(downloading){
+			return getDownloading(id);
+		}
+		var status = Main.installedAddons[id];
+		switch(status){
+			case undefined:
+				return getWaiting(id);
+			case Addon.Missing:
+				return getMissing(id);
+			case Addon.Update:
+				return getUpdate(id);
+			case Addon.Ready:
+				return getMissing(id);
+		}
+	}
+
 	return {
-		'container':function(){
+		'getContainer':function(){
 			var container = $('<div>').attr({
 				'id':'addonStatusContainer',
 				'class':'col-md-3 col-lg-2 col-md-pull-9 col-lg-pull-8 column',
 			});
 			return container;
 		},
-		'get':function(id, downloading){
-			if(downloading){
-				return getDownloading(id);
+		'setAddon':function(id, downloading){
+			var matches = $('#'+id+'Status');
+			if(matches.length > 0){
+				matches.replaceWith(getAddon(id, downloading));
 			}
-			var status = Main.installedAddons[id];
-			switch(status){
-				case undefined:
-					return getWaiting(id);
-				case Addon.Missing:
-					return getMissing(id);
-				case Addon.Update:
-					return getUpdate(id);
-				case Addon.Ready:
-					return getMissing(id);
-			}
+		},
+
+		'setProgress':function(id, percent){
+			$('#'+id+'ProgressBar').attr({'aria-valuenow':percent, 'style':'width:'+percent+'%;'});
 		}
 	}
 
