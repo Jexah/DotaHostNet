@@ -1,4 +1,4 @@
-Templates = Templates || {};
+var Templates = window.Templates || {};
 
 Templates.spinner = ''+
 '<div class="spinner">'+

@@ -422,8 +422,8 @@ $(document).ready(function(){
 						'<div class="row" style="margin-top:100px;">',
 							'<div class="col-md-9 col-lg-8 col-md-push-3 col-lg-push-2 column">',
 								'<div class="row">',
-										'{{connectedToModManager}}',
-										'{{connectedToLobbyManager}}',
+									'{{connectedToModManager}}',
+									'{{connectedToLobbyManager}}',
 								'</div>',
 								'<div class="row">',
 									'<div class="col-md-12 column">',
@@ -511,11 +511,11 @@ $(document).ready(function(){
 					'<div class="col-lg-0 col-md-0 col-sm-0 column col-xl-2"></div>',
 					'<div style="padding:0 5px" class="col-lg-6 col-md-6 col-sm-6 col-xs-12 column col-xl-4">',
 						'{{0}}',
-						function(args){
+						function(lobby){
 							var teamID = '0';
-							var teams = args[LOBBY_TEAMS];
+							var teams = lobby.Teams;
 							var team = teams[teamID];
-							var players = team[TEAM_PLAYERS];
+							var players = team.Players;
 
 							var listGroup = $('<div>').attr({'id':'teamList'+teamID, 'class':'list-group'})
 								.append($('<a>').attr({'style':'cursor:default;', 'class':'list-group-item disabled'})
@@ -642,15 +642,15 @@ $(document).ready(function(){
 				switch(x[1]){
 					case 'home':
 						var lobbiesString = x[2];
-						Main.lobbies = new Lobbies(lobbiesString);
+						Main.lobbies = Lobbies(lobbiesString);
 						refreshHome();
 						break;
 					case 'lobby':
 						var lobbyString = x[2];
 						Main.currentLobby = new Lobby(lobbyString);
-						selectPage('lobby-' + currentLobby.Addons['0'].Id, currentLobby);
+						selectPage('lobby-' + Main.currentLobby.Addons['0'].Id, Main.currentLobby);
 						$('#leaveLobbyReconnect').off().click(function(){
-							if(currentLobby.Status == Lobby.Active){
+							if(currentLobby.Status === Lobby.Active){
 								console.log("steam://connect/" + x[3]);
 								location.href = "steam://connect/" + x[3];
 							}else{
@@ -709,7 +709,7 @@ $(document).ready(function(){
 				if(x[1] === 'success'){
 					var lobby = new Lobby(x[2]);
 					currentLobby = lobby;
-					selectPage('lobby-' + currentLobby.Addons['0'].Id, currentLobby);
+					selectPage('lobby-' + Main.currentLobby.Addons['0'].Id, Main.currentLobby);
 				}else{
 					console.log('Failed to join lobby: ' + x[2]);
 				}
@@ -1345,25 +1345,31 @@ $(document).ready(function(){
 					'Id':'lod',
 					'Options':{}
 				});
-				console.log(JSON.stringify(addon.Options))
 				settingsBody.find('select, input').each(function(){
 					var e = $(this);
 					addon.Options[e.attr('id')] = e.val() == 'on' ? ''+(~~e.is(':checked')) : e.val();
 				});
 
+				console.log(JSON.stringify(addon.Options))
+
 				var team1 = new Team({
 					'Name':'Radiant',
 					'MaxPlayers':'5',
-					'Players':new Players({})
+					'Players':Players()
 				});
+
+				console.log('1');
 
 				var team2 = new Team({
 					'Name':'Dire',
 					'MaxPlayers':'5',
-					'Players':new Players({})
+					'Players':Players()
 				});
+				console.log('2');
 
 				var teams = new Teams({"0":team1,"1":team2});
+
+				console.log('3');
 
 				var lobby = new Lobby({
 					'Addons':{'0':addon},
@@ -1375,10 +1381,17 @@ $(document).ready(function(){
 					'Addons':addons
 				});
 
+				console.log('4');
+
 				var addons = lobby.Addons;
+
+				console.log('5');
+
+				var allGood = true;
+
 				Helpers.each(addons, function(addonKey, addon, i){
 					var installedAddon = installedAddons[addon.Id];
-					if(installedAddon != ADDON_STATUS_READY){
+					if(installedAddon != Addon.Ready){
 						switch(installedAddon){
 							case ADDON_STATUS_READY:
 								alert('An unknown error has occured.');
@@ -1393,15 +1406,26 @@ $(document).ready(function(){
 								alert('Please update ' + addon.Id + '.');
 								break;
 						}
+						allGood = false;
 						return;
 					}
 				});
 
-				args = JSON.stringify(JSON.stringify(lobby.obj()));
-				
+				console.log('6');
+
+				if(!allGood) return;
+
+				console.log('7');
+
+				args = JSON.stringify(lobby.raw());
+
+				console.log('8');
+
 				Main.wsClientLobby.send(Helpers.packArguments('createLobby', args));
 
-				$('#createLobbyOptions').modal('toggle');
+				console.log('9');
+
+				$('#createLobbyOptions').modal('hide');
 			});
 		})();
 

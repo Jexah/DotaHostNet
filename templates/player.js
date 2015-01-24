@@ -7,7 +7,7 @@ Player = function(player){
 	var Badges = '4';
 	var Cosmetics = '5';
 
-	var obj = player && player.obj && player.obj() || (typeof player === 'string') ? JSON.parse(player) : player;
+	var obj = player && player.raw && player.raw() || (typeof player === 'string' ? JSON.parse(player) : player) || {};
 
 	this.SteamId = obj[SteamId] || obj['SteamId'];
 	this.PersonaName = obj[PersonaName] || obj['PersonaName'];
@@ -16,7 +16,13 @@ Player = function(player){
 	this.Badges = obj[Badges] || obj['Badges'];
 	this.Cosmetics = obj[Cosmetics] || obj['Cosmetics'];
 	
-	this.obj = function(){
+	this.raw = function(){
+		obj[SteamId] = this.SteamId;
+		obj[PersonaName] = this.PersonaName;
+		obj[Avatar] = this.Avatar;
+		obj[ProfileUrl] = this.ProfileUrl;
+		obj[Badges] = this.Badges;
+		obj[Cosmetics] = this.Cosmetics;
 		return obj;
 	}
 	
@@ -25,13 +31,30 @@ Player = function(player){
 
 Players = function(players){
 	
-	var obj = (typeof players === 'string') ? JSON.parse(players) : players;
+	console.log('wtf');
+	console.log('p1');
+
+	var obj = players && players.raw && players.raw() || (typeof players === 'string' ? JSON.parse(players) : players) || {};
 
 	var ret = {};
 
-	Helpers.each(players, function(playerKey, player, i){
+	console.log('p2');
+
+	Helpers.each(obj, function(playerKey, player, i){
 		ret[playerKey] = new Player(player);
 	});
+
+	console.log('p3');
+
+	ret.raw = function(){
+		var rawObj = {};
+		Helpers.each(ret, function(playerKey, player, i){
+			playerKey !== 'raw' && (rawObj[playerKey] = player.raw());
+		});
+		return rawObj;
+	}
+
+	console.log('p4');
 
 	return ret;
 

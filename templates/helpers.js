@@ -60,10 +60,10 @@ Helpers = {
 	},
 
 	'each':function(obj, func){
-		if(obj && typeof(object) === 'object'){
+		if(obj && (typeof(obj) === 'object' || typeof(obj) === 'function')){
 			var i = 0;
 			var keys = Object.keys(obj);
-			var len = obj.length;
+			var len = keys.length;
 			for(; i < len; i+=1){
 				var key = keys[i];
 				var value = obj[key];
