@@ -8,15 +8,19 @@ Lobby = function(lobby){
 	var Region = '5';
 	var Status = '6';
 
-	var obj = (typeof lobby === 'string') ? JSON.parse(lobby) : lobby;
+	var obj = lobby && lobby.obj && lobby.obj() || (typeof lobby === 'string') ? JSON.parse(lobby) : lobby;
 
-	this.Name = obj[Name];
-	this.Teams = new Teams(obj[Teams]);
-	this.Addons = new Addons(obj[Addons]);
-	this.MaxPlayers = obj[MaxPlayers];
-	this.CurrentPlayers = obj[CurrentPlayers];
-	this.Region = obj[Region];
-	this.Status = obj[Status];
+	this.Name = obj[Name] || obj['Name'];
+	this.Teams = new window.Teams(obj[Teams] || obj['Teams']);
+	this.Addons = new window.Addons(obj[Addons] || obj['Addons']);
+	this.MaxPlayers = obj[MaxPlayers] || obj['MaxPlayers'];;
+	this.CurrentPlayers = obj[CurrentPlayers] || obj['CurrentPlayers'];;
+	this.Region = obj[Region] || obj['Region'];;
+	this.Status = obj[Status] || obj['Status'];;
+
+	this.obj = function(){
+		return obj;
+	}
 
 }
 
@@ -31,10 +35,9 @@ Lobbies = function(lobbies){
 
 	var ret = {};
 
-	for(var lobbyKey in obj){
-		if(!obj.hasOwnProperty(lobbyKey)){continue;}
-		ret[lobbyKey] = new Lobby(obj[lobbyKey]);
-	}
+	Helpers.each(lobbies, function(lobbyKey, lobby, i){
+		ret[lobbyKey] = new Lobby(lobby);
+	});
 
 	return ret;
 

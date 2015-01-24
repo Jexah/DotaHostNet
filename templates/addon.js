@@ -1,12 +1,16 @@
 Addon = function(addon){
-	
-	Id = '0';
-	Options = '1';
 
-	var obj = (typeof addon === 'string') ? JSON.parse(addon) : addon;
+	var Id = '0';
+	var Options = '1';
 
-	this.Id = obj[Id];
-	this.Options = obj[Options]
+	var obj = addon && addon.obj && addon.obj() || (typeof addon === 'string') ? JSON.parse(addon) : addon;
+
+	this.Id = obj[Id] || obj['Id'];
+	this.Options = obj[Options] || obj['Options'];
+
+	this.obj = function(){
+		return obj;
+	}
 
 }
 
@@ -22,10 +26,9 @@ Addons = function(addons){
 
 	var ret = {};
 
-	for(var addonKey in obj){
-		if(!obj.hasOwnProperty(addonKey)){continue;}
-		ret[addonKey] = new Addon(obj[addonKey]);
-	}
+	Helpers.each(addons, function(addonKey, addon, i){
+		ret[addonKey] = new Addon(addon);
+	});
 
 	return ret;
 

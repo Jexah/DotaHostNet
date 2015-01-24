@@ -93,7 +93,7 @@ Templates.Lobbies = (function(){
 		lobbiesTable.html(tHead);
 
 		tBody.html('');
-		lobbies.ForEach(function(key, value, i){
+		Helpers.each(lobbies, function(key, value, i){
 			tBody.append(newRow(value));
 		});
 

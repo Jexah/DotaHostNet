@@ -34,24 +34,15 @@
 
 
 
-	alert('yolo');
-
-
-
-
+var Main;
 
 
 
 
 $(document).ready(function(){
-	window.Main = new function(){
+	Main = new function(){
 
-		if(user != null){
-			thisPlayer[PLAYER_PROFILEURL] = user['profileurl'];
-			thisPlayer[PLAYER_AVATAR] = user['avatarmedium'];
-			thisPlayer[PLAYER_PERSONANAME] = user['personaname'];
-			thisPlayer[PLAYER_STEAMID] = user['steamid'];
-		}
+		var thisPlayer;
 
 		var BADGES_TEXT = 0;
 		var BADGES_CLASS = 1;
@@ -106,16 +97,29 @@ $(document).ready(function(){
 		var wsID = "";
 
 		this.wsClientManager;
-		this.connectedLobby = false;
+		this.connectedLobby = null;
 
 		this.wsClientLobby;
-		this.connectedClient = false;
+		this.connectedClient = null;
 
 		this.installedAddons = {};
 
+		this.init = function(){
+			if(user != null){
+				thisPlayer = new Player({
+					'ProfileUrl':user['profileurl'],
+					'Avatar':user['avatarmedium'],
+					'PersonaName':user['personaname'],
+					'SteamId':user['steamid']
+				});
+			}
+
+			selectPage('home', [user != null]);
+		}
+
 		this.tryLoadUri = function(){
 			Helpers.loadAppByUri('dotahost://', function(){
-				$('#mmStatus').replaceWith(Templates.wsDivs.local());
+				$('#mmStatus').replaceWith(Templates.WsDivs.local());
 				$('#addonStatusContainer').empty();
 			});
 		}
@@ -375,7 +379,11 @@ $(document).ready(function(){
 					},
 
 					'lobbiesTable':function(args){
-						return Templates.Lobies.getTemplate();
+						return Templates.Lobbies.getTemplate();
+					},
+
+					'addonStatusContainer':function(args){
+						return Templates.AddonStatus.getContainer();
 					}
 				},
 				// User is not logged in
@@ -443,7 +451,7 @@ $(document).ready(function(){
 								'</div>',
 								'{{lobbiesTable}}',
 							'</div>',
-							'<div id="addonStatusContainer" class="col-md-3 col-lg-2 col-md-pull-9 col-lg-pull-8 column"></div>',
+							'{{addonStatusContainer}}',
 							'<div class="col-md-0 col-lg-2 column">',
 							'</div>',
 						'</div>'
@@ -566,7 +574,7 @@ $(document).ready(function(){
 											var chatText = chatTextElement.val();
 											if(chatText != ''){
 												addChat($('#lodLobbyChat'), user['personaname'], chatText, user['cosmetics']);
-												wsClientLobby.send(packArguments('chat', chatText));
+												Main.wsClientLobby.send(Helpers.packArguments('chat', chatText));
 												chatTextElement.val('');
 											}
 										});
@@ -579,7 +587,7 @@ $(document).ready(function(){
 						'{{6}}',
 						function(args){
 							return $('<button>').attr({'class':'btn btn-success btn-lg', 'style':'width:100%;margin-bottom:20px;'}).text('Start Game').click(function(){
-								wsClientLobby.send('startGame');
+								Main.wsClientLobby.send('startGame');
 							});
 						},
 						'{{5}}',
@@ -588,7 +596,7 @@ $(document).ready(function(){
 								if(currentLobby[LOBBY_STATUS] == '2'){
 									location.href = "steam://connect/" + x[1];
 								}else{
-									wsClientLobby.send('leaveLobby');
+									Main.wsClientLobby.send('leaveLobby');
 								}
 							});
 						},
@@ -620,39 +628,33 @@ $(document).ready(function(){
 			'id':function(e, x){
 				wsID = x[1];
 			},
-			'addon':function addon(e, x){
+			'addon':function (e, x){
 				// addon;lod;100
 				var id = x[1];
 				var percent = x[2];
-				if(addon.downloadStarted[id]){
-					Templates.AddonStatus.setProgress(id, percent);
-				}else if(percent !== '100'){
-					Templates.AddonStatus.setAddon(id, true);
-				}else{
-					Templates.AddonStatus.setAddon(id);
-				}
+				Templates.AddonStatus.setProgress(id, percent);
 			},
 
 			'installationComplete':function(e, x){
-				wsClientManager.send('getAddonStatus');
+				Main.wsClientManager.send('getAddonStatus');
 			},
 			'page':function(e, x){
 				switch(x[1]){
 					case 'home':
 						var lobbiesString = x[2];
-						lobbies = new Lobbies(lobbiesString);
+						Main.lobbies = new Lobbies(lobbiesString);
 						refreshHome();
 						break;
 					case 'lobby':
 						var lobbyString = x[2];
-						currentLobby = new Lobby(lobbyString);
+						Main.currentLobby = new Lobby(lobbyString);
 						selectPage('lobby-' + currentLobby.Addons['0'].Id, currentLobby);
 						$('#leaveLobbyReconnect').off().click(function(){
 							if(currentLobby.Status == Lobby.Active){
 								console.log("steam://connect/" + x[3]);
 								location.href = "steam://connect/" + x[3];
 							}else{
-								wsClientLobby.send('leaveLobby');
+								Main.wsClientLobby.send('leaveLobby');
 							}
 						});
 						break;
@@ -660,7 +662,7 @@ $(document).ready(function(){
 			},
 			'getLobbies':function(e, x){
 				var lobbiesString = x[1];
-				lobbies = new Lobbies(lobbiesString);
+				Main.lobbies = new Lobbies(lobbiesString);
 				populateLobbies();
 			},
 			'leaveLobby':function(e, x){
@@ -737,7 +739,7 @@ $(document).ready(function(){
 			'validate':function(e, x){
 				if(x[1] == 'success') {
 					isVerified = true;
-					wsClientLobby.send('getPage');
+					Main.wsClientLobby.send('getPage');
 				} else {
 					isVerified = false;
 					refreshHome();
@@ -746,9 +748,8 @@ $(document).ready(function(){
 			'addonStatus':function(e, x){
 				var status = x[1];
 				var addonID = x[2];
-				installedAddons[addonID] = status;
-				var addonStatusDiv = $('#'+addonID+'Status');
-				addonStatusDiv.replaceWith(Templates.addonStatus.get(addonID));
+				Main.installedAddons[addonID] = status;
+				Templates.AddonStatus.setAddon(addonID, false);
 			},
 
 			'connectToServer':function(e, x){
@@ -761,7 +762,7 @@ $(document).ready(function(){
 
 			'gameServerInfo':function(e, x){
 				if(x[1] === "success"){
-					wsClientManager.send(packArguments(x[0], x[2], JSON.stringify(currentLobby)));
+					Main.wsClientManager.send(Helpers.packArguments(x[0], x[2], JSON.stringify(currentLobby)));
 				}
 			},
 
@@ -801,7 +802,7 @@ $(document).ready(function(){
 				currentLobby.Status = Lobby.Active;
 			},
 			'invalid':function(e, c){
-				Templates.Invalid.hide();
+				Templates.Invalid.show();
 			}
 		}
 
@@ -847,7 +848,7 @@ $(document).ready(function(){
 				.click(function(e){
 					if(empty){
 						e.preventDefault();
-						wsClientLobby.send(packArguments('swapTeam', $(this).attr('slotid'), teamid));
+						Main.wsClientLobby.send(Helpers.packArguments('swapTeam', $(this).attr('slotid'), teamid));
 					}
 				});
 			listGroup.append(container);
@@ -900,7 +901,7 @@ $(document).ready(function(){
 					if(lobbiesChangedTimeout){
 						return;
 					}
-					wsClientManager.send('getPatchGameInfo');
+					Main.wsClientManager.send('getPatchGameInfo');
 					setTimeout(function(){
 						if(!gameInfoPatched){
 							alert('Please patch gameinfo (in settings).');
@@ -920,7 +921,7 @@ $(document).ready(function(){
 									alert('Please update the addon.');
 									break;
 								case ADDON_STATUS_READY:
-									wsClientLobby.send(packArguments('joinLobby', $(this).find('td').first().text()));
+									Main.wsClientLobby.send(Helpers.packArguments('joinLobby', $(this).find('td').first().text()));
 									break;
 								default:
 									if(connectedClient){
@@ -962,7 +963,7 @@ $(document).ready(function(){
 				element.click(function(e){
 					e.preventDefault();
 					var thisId = $(this).attr('id');
-					wsClientLobby.send(packArguments('swapTeam', thisId[1], thisId[0]));
+					Main.wsClientLobby.send(Helpers.packArguments('swapTeam', thisId[1], thisId[0]));
 				});
 				return;
 			}
@@ -999,36 +1000,36 @@ $(document).ready(function(){
 		}
 
 		function setupClientSocket(){
-			wsClientManager = new WebSocket("ws://127.0.0.1:2074");
+			Main.wsClientManager = new WebSocket("ws://127.0.0.1:2074");
 
-			wsClientManager.sendReal = wsClientManager.send;
-			wsClientManager.send = function(string){
+			Main.wsClientManager.sendReal = Main.wsClientManager.send;
+			Main.wsClientManager.send = function(string){
 				if(string != 'time'){
 					console.log('Sent:');
 					console.log(string);
 				}
-				wsClientManager.sendReal(string);
+				Main.wsClientManager.sendReal(string);
 			}
 
-			wsClientManager.onopen = function(e){
-				connectedClient = true;
+			Main.wsClientManager.onopen = function(e){
+				Main.connectedClient = true;
 
 				clearTimeout(launchModManagerTimeout);
 
-				timeoutPrevention = setInterval(function(){wsClientManager.send("time");}, 1000);
+				timeoutPrevention = setInterval(function(){Main.wsClientManager.send("time");}, 1000);
 
 				refreshHome();
 
-				wsClientManager.send("getAddonStatus");
-				wsClientManager.send('getPatchGameInfo');
+				Main.wsClientManager.send("getAddonStatus");
+				Main.wsClientManager.send('getPatchGameInfo');
 
 				updateSettingsOptions();
 			};
 
-			wsClientManager.onclose = function(e){
-				if(connectedClient){
+			Main.wsClientManager.onclose = function(e){
+				if(Main.connectedClient){
 					setTimeout(setupClientSocket, 250);
-					connectedClient = false;
+					Main.connectedClient = false;
 					launchModManagerTimeout = null;
 					refreshHome();
 					clearInterval(timeoutPrevention);
@@ -1039,17 +1040,17 @@ $(document).ready(function(){
 			};
 			var onMessage = function(e){
 				console.log(e.data);
-				var args = e.data.split(MSG_SEP);
+				var args = e.data.split(Helpers.MSG_SEP);
 				if(wsHooks.hasOwnProperty(args[0])){
 					wsHooks[args[0]](e, args);
 				}
 			};
-			wsClientManager.onmessage = onMessage;
+			Main.wsClientManager.onmessage = onMessage;
 
-			wsClientManager.onerror = function(e, r, t){
+			Main.wsClientManager.onerror = function(e, r, t){
 				if(launchModManagerTimeout == null){
 					launchModManagerTimeout = setTimeout(function(){
-						loadAppByUri("dotahost://");
+						Main.tryLoadUri();
 					}, 1000);
 				}
 				setTimeout(setupClientSocket, 250);
@@ -1057,31 +1058,31 @@ $(document).ready(function(){
 		};
 
 		function setupWebLobbySocket(){
-			wsClientLobby = new WebSocket("ws://dotahost.net:2075");
+			Main.wsClientLobby = new WebSocket("ws://dotahost.net:2075");
 
-			wsClientLobby.sendReal = wsClientLobby.send;
-			wsClientLobby.send = function(string){
+			Main.wsClientLobby.sendReal = Main.wsClientLobby.send;
+			Main.wsClientLobby.send = function(string){
 				if(string != 'time'){
 					console.log('Sent:');
 					console.log(string);
 				}
-				wsClientLobby.sendReal(string);
+				Main.wsClientLobby.sendReal(string);
 			}
 
-			wsClientLobby.onopen = function(e){
+			Main.wsClientLobby.onopen = function(e){
 
-				connectedLobby = true;
+				Main.connectedLobby = true;
 
 				if(user != null){
-					wsClientLobby.send("getLobbies");
+					Main.wsClientLobby.send("getLobbies");
 				}
 
 				// Ask for validation straight away
-				wsClientLobby.send(packArguments('validate', user.token, user.steamid));
+				Main.wsClientLobby.send(Helpers.packArguments('validate', user.token, user.steamid));
 			};
 
-			wsClientLobby.onclose = function(e){
-				if(connectedLobby){
+			Main.wsClientLobby.onclose = function(e){
+				if(Main.connectedLobby){
 					$('#dotahostLobbyConnectedDiv').html(
 						'<div class="alert alert-danger">'+
 							'<h4>LobbyManager</h4><span class="glyphicon glyphicon-remove" style="position:absolute;left:calc(100% - 50px);top:10px;"></span>'+
@@ -1089,12 +1090,12 @@ $(document).ready(function(){
 						'</div>'
 					);
 					setTimeout(setupWebLobbySocket, 250);
+					Main.connectedLobby = false;
 				}
-				connectedLobby = false;
 			};
 
-			wsClientLobby.onerror = function(e, r, t){
-				if(wsClientLobby.readyState === 3){
+			Main.wsClientLobby.onerror = function(e, r, t){
+				if(Main.wsClientLobby.readyState === 3){
 					$('#dotahostLobbyConnectedDiv').html(
 						'<div class="alert alert-danger">'+
 							'<h4>LobbyManager</h4><span class="glyphicon glyphicon-remove" style="position:absolute;left:calc(100% - 50px);top:10px;"></span>'+
@@ -1108,16 +1109,14 @@ $(document).ready(function(){
 			var onMessage = function(e){
 				console.log('Received:');
 				console.log(e.data);
-				var args = e.data.split(MSG_SEP);
+				var args = e.data.split(Helpers.MSG_SEP);
 
 				if(wsHooks.hasOwnProperty(args[0])){
 					wsHooks[args[0]](e, args);
 				}
 			};
-			wsClientLobby.onmessage = onMessage;
+			Main.wsClientLobby.onmessage = onMessage;
 		};
-
-		selectPage('home', [user != null]);
 
 		// Load up the website if they are in the beta, and not banned
 		if(user != null && user.beta && !user.banreason){
@@ -1137,13 +1136,13 @@ $(document).ready(function(){
 		}
 
 		function updateSettingsOptions(){
-			if(connectedClient){
+			if(Main.connectedClient){
 				$('#settingsBody').html('').append(
 					$('<div>').attr({'id':'settingsBodyAutorun', 'style':'margin-bottom:40px;'}).append(
 						$('<div>').attr({'class':'input-group'}).append(
 							$('<span>').attr({'class':'input-group-addon', 'style':'text-align:left;height:68px;'}).text('Autorun DotaHost ModManager:')
 						).append(
-							$('<span>').attr({'class':'input-group-addon', 'style':'text-align:right;height:68px;'}).html(spinner)
+							$('<span>').attr({'class':'input-group-addon', 'style':'text-align:right;height:68px;'}).html(Templates.spinner)
 						)
 					).append(
 						$('<span>').attr('class', 'help-block').text('If this is selected, the ModManager will automatically launch when you visit this website. This requires administrator privillages on the computer you are using.')
@@ -1158,7 +1157,7 @@ $(document).ready(function(){
 							$('<span>').attr({'class':'input-group-btn', 'style':'text-align:right;'}).append(
 								$('<button>').attr({'class':'btn btn-default', 'type':'button'}).text('Save').click(function(){
 									var input = $(this).parent().parent().children(':eq(1)');
-									wsClientManager.send(packArguments('setDotaPath', input.val()));
+									Main.wsClientManager.send(Helpers.packArguments('setDotaPath', input.val()));
 									$(this).prop('disabled', 'disabled').text('Saving...');
 									input.prop('disabled', 'disabled');
 								})
@@ -1174,7 +1173,7 @@ $(document).ready(function(){
 						).append(
 							$('<span>').attr({'class':'input-group-btn', 'style':'text-align:right;'}).append(
 								$('<button>').attr({'class':'btn '+(gameInfoPatched==null?'btn-default':(gameInfoPatched?'btn-success':'btn-danger')), 'type':'button'}).prop('disabled', gameInfoPatched == null || gameInfoPatched).text(gameInfoPatched == null?'Loading...':(gameInfoPatched?'Patched':'Patch')).click(function(){
-									wsClientManager.send('patchGameInfo');
+									Main.wsClientManager.send('patchGameInfo');
 									$(this).prop('disabled', true).text('Patching...');
 								}))
 						)
@@ -1189,9 +1188,9 @@ $(document).ready(function(){
 
 		function openSettingsModal(){
 			updateSettingsOptions();
-			wsClientManager.send('getAutorun');
-			wsClientManager.send('getDotapath');
-			wsClientManager.send('getPatchGameInfo');
+			Main.wsClientManager.send('getAutorun');
+			Main.wsClientManager.send('getDotapath');
+			Main.wsClientManager.send('getPatchGameInfo');
 		}
 
 		function refreshCreateLobbyModal(){
@@ -1286,11 +1285,11 @@ $(document).ready(function(){
 			$('#settingsBodyAutorun').children(':first').children(':eq(1)').html('').append(
 				$('<input>').attr('type', 'checkbox').prop('checked', autorun).click(function(e){
 					if(this.checked){
-						wsClientManager.send('autorun');
+						Main.wsClientManager.send('autorun');
 					}else{
-						wsClientManager.send('uninstall');
+						Main.wsClientManager.send('uninstall');
 					}
-					$(this).parent().html(spinner);
+					$(this).parent().html(Templates.spinner);
 				})
 			);
 		}
@@ -1301,7 +1300,7 @@ $(document).ready(function(){
 			group.children(':eq(2)').html('').append(
 				$('<button>').attr({'class':'btn btn-default', 'type':'button'}).text('Save').click(function(){
 					var input = group.children(':eq(1)');
-					wsClientManager.send(packArguments('setDotaPath', input.val()));
+					Main.wsClientManager.send(Helpers.packArguments('setDotaPath', input.val()));
 					$(this).prop('disabled', 'disabled').text('Saving...');
 					input.prop('disabled', !dotaPath);
 				})
@@ -1316,17 +1315,13 @@ $(document).ready(function(){
 
 		function refreshHome(){
 			selectPage('home', [user != null]);
-			if(this.lobbies){
+			if(Main.lobbies){
 				Templates.Lobbies.showLobbies();
 			}
-			if(connectedClient){
-				$('#addonStatusContainer').append(
-					'<div id="lodStatus" class="bs-callout bs-callout-info col-sm-4 col-md-12" style="cursor:default;">'+
-						'<h4>Legends of Dota <span style="float:right;margin-top:-20px;margin-right:-4px;">'+spinner+'</span></h4>'+
-					'</div>'
-				);
+			if(Main.connectedClient){
+				Templates.AddonStatus.setAddon('lod', false);
 			}
-			wsClientManager.send("getAddonStatus");
+			Main.wsClientManager.send("getAddonStatus");
 		}
 
 		(function(){ // addClickHandlerToCreateLobby
@@ -1335,7 +1330,7 @@ $(document).ready(function(){
 					alert('Please log in.');
 					return;
 				}
-				if(!connectedClient){
+				if(!Main.connectedClient){
 					alert('Please run the ModManager.');
 					return;
 				}
@@ -1346,46 +1341,43 @@ $(document).ready(function(){
 
 				var settingsBody = $('#createLobbyBody');
 
-				var lobby = {};
-				var addon = {};
-				addon[ADDON_ID] = "lod";
-				addon[ADDON_OPTIONS] = {};
+				var addon = new Addon({
+					'Id':'lod',
+					'Options':{}
+				});
+				console.log(JSON.stringify(addon.Options))
 				settingsBody.find('select, input').each(function(){
 					var e = $(this);
-					addon[ADDON_OPTIONS][e.attr('id')] = e.val() == 'on' ? ''+(~~e.is(':checked')) : e.val();
+					addon.Options[e.attr('id')] = e.val() == 'on' ? ''+(~~e.is(':checked')) : e.val();
 				});
 
-				var addons = {"0":addon};
+				var team1 = new Team({
+					'Name':'Radiant',
+					'MaxPlayers':'5',
+					'Players':new Players({})
+				});
 
-				var team1 = {};
-				team1[TEAM_NAME] = "Radiant";
-				team1[TEAM_MAX_PLAYERS] = "5";
-				team1[TEAM_PLAYERS] = {};
+				var team2 = new Team({
+					'Name':'Dire',
+					'MaxPlayers':'5',
+					'Players':new Players({})
+				});
 
-				var team2 = {};
-				team2[TEAM_NAME] = "Dire";
-				team2[TEAM_MAX_PLAYERS] = "5";
-				team2[TEAM_PLAYERS] = {};
+				var teams = new Teams({"0":team1,"1":team2});
 
+				var lobby = new Lobby({
+					'Addons':{'0':addon},
+					'Name':user['personaname'] + "'s Lobby",
+					'CurrentPlayers':'0',
+					'MaxPlayers':'10',
+					'Region':'BHS-1',
+					'Teams':teams,
+					'Addons':addons
+				});
 
-				var teams = {"0":team1,"1":team2};
-
-				lobby[LOBBY_NAME] = user['personaname'] + "'s Lobby";
-				lobby[LOBBY_CURRENT_PLAYERS] = "0";
-				lobby[LOBBY_MAX_PLAYERS] = "2";
-				lobby[LOBBY_REGION] = REGION_TO_ID["America"];
-				lobby[LOBBY_TEAMS] = teams;
-				lobby[LOBBY_ADDONS] = addons;
-
-				args = JSON.stringify(lobby);
-
-				var allReady = true;
-
-				var addons = lobby[LOBBY_ADDONS];
-				for(var addonKey in addons){
-					if(!addons.hasOwnProperty(addonKey)){continue;};
-					var addon = addons[addonKey];
-					var installedAddon = installedAddons[addon[ADDON_ID]];
+				var addons = lobby.Addons;
+				Helpers.each(addons, function(addonKey, addon, i){
+					var installedAddon = installedAddons[addon.Id];
 					if(installedAddon != ADDON_STATUS_READY){
 						switch(installedAddon){
 							case ADDON_STATUS_READY:
@@ -1395,22 +1387,21 @@ $(document).ready(function(){
 								alert('An unknown error has occured.');
 								break;
 							case ADDON_STATUS_MISSING:
-								alert('Please install ' + addon[ADDON_ID] + '.');
+								alert('Please install ' + addon.Id + '.');
 								break;
 							case ADDON_STATUS_UPDATE:
-								alert('Please update ' + addon[ADDON_ID] + '.');
+								alert('Please update ' + addon.Id + '.');
 								break;
 						}
-						allReady = false;
 						return;
 					}
-				}
+				});
 
-				if(allReady){
-					wsClientLobby.send(packArguments('createLobby', args));
+				args = JSON.stringify(JSON.stringify(lobby.obj()));
+				
+				Main.wsClientLobby.send(Helpers.packArguments('createLobby', args));
 
-					$('#createLobbyOptions').modal('toggle');
-				}
+				$('#createLobbyOptions').modal('toggle');
 			});
 		})();
 
@@ -1426,10 +1417,8 @@ $(document).ready(function(){
 				console.log('WARNING: Failed to find template named ' + templateName);
 			}
 		}
+	};
 
-		// args is an array of arguments
-		// funcs is an an object containing reusable functions
-		alert('kk');
-	}();
+	Main.init();
 
 });

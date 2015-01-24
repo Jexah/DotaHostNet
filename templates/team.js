@@ -1,14 +1,18 @@
 Team = function(team){
-	
+
 	var Name = '0';
 	var MaxPlayers = '1';
 	var Players = '2';
 
-	var obj = (typeof team === 'string') ? JSON.parse(team) : team;
+	var obj = team && team.obj && team.obj() || (typeof team === 'string') ? JSON.parse(team) : team;
 
-	this.Name = obj[Name];
-	this.MaxPlayers = obj[MaxPlayers];
-	this.Players = new Players(obj[Players]);
+	this.Name = obj[Name] || obj['Name'];
+	this.MaxPlayers = obj[MaxPlayers] || obj['MaxPlayers'];
+	this.Players = new window.Players(obj[Players] || obj['Players']);
+	
+	this.obj = function(){
+		return obj;
+	}
 }
 
 
@@ -18,10 +22,9 @@ Teams = function(teams){
 
 	var ret = {};
 
-	for(var teamKey in obj){
-		if(!obj.hasOwnProperty(teamKey)){continue;}
-		ret[teamKey] = new Team(obj[teamKey]);
-	}
+	Helpers.each(teams, function(teamKey, team, i){
+		ret[teamKey] = new Team(team);
+	});
 
 	return ret;
 

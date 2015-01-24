@@ -2,6 +2,8 @@ var Templates = window.Templates || {};
 
 Templates.AddonStatus = (function(){
 
+	var addonsDownloading = {};
+
 	var addonStatusContainer = $('<div>').attr({
 		'id':'addonStatusContainer',
 		'class':'col-md-3 col-lg-2 col-md-pull-9 col-lg-pull-8 column'
@@ -31,9 +33,10 @@ Templates.AddonStatus = (function(){
 			:
 				$('<h4>').attr('style', 'width:100%;').text('Legends of Dota ').append(
 					$('<span>').attr({
-						'style':'float:right;margin-top:-20px;margin-right:-4px;'
+						'style':(glyphicon!=='spinner'?'float:right;':'float:right;margin-top:-20px;margin-right:-4px;'),
+						'class':(glyphicon!=='spinner'?'glyphicon glyphicon-' + glyphicon:'')
 					}).html(
-						Templates.spinner
+						(glyphicon === 'spinner'?Templates.spinner:'')
 					)
 				)
 			)
@@ -53,12 +56,12 @@ Templates.AddonStatus = (function(){
 	}
 	var getMissing = function(id){
 		return baseAddonDiv(id, 'danger', 'pointer', 'download-alt', function(e){
-			Main.wsClientManager.send(packArguments('update', 'lod'));
+			Main.wsClientManager.send(Helpers.packArguments('update', 'lod'));
 		});
 	}
 	var getUpdate = function(id){
 		return baseAddonDiv(id, 'warning', 'pointer', 'download-alt', function(e){
-			Main.wsClientManager.send(packArguments('update', 'lod'));
+			Main.wsClientManager.send(Helpers.packArguments('update', 'lod'));
 		});
 	}
 	var getReady = function(id){
@@ -78,27 +81,33 @@ Templates.AddonStatus = (function(){
 			case Addon.Update:
 				return getUpdate(id);
 			case Addon.Ready:
-				return getMissing(id);
+				return getReady(id);
 		}
 	}
 
 	return {
 		'getContainer':function(){
-			var container = $('<div>').attr({
-				'id':'addonStatusContainer',
-				'class':'col-md-3 col-lg-2 col-md-pull-9 col-lg-pull-8 column',
-			});
-			return container;
+			return addonStatusContainer;
 		},
+
 		'setAddon':function(id, downloading){
 			var matches = $('#'+id+'Status');
 			if(matches.length > 0){
 				matches.replaceWith(getAddon(id, downloading));
+			}else{
+				addonStatusContainer.append(getAddon(id, downloading));
 			}
+			addonsDownloading[id] = !!downloading;
 		},
 
 		'setProgress':function(id, percent){
-			$('#'+id+'ProgressBar').attr({'aria-valuenow':percent, 'style':'width:'+percent+'%;'});
+			if(addonsDownloading[id]){
+				$('#'+id+'ProgressBar').attr({'aria-valuenow':percent, 'style':'width:'+percent+'%;'});
+			}else if(percent !== '100'){
+				Templates.AddonStatus.setAddon(id, true);
+			}else{
+				Templates.AddonStatus.setAddon(id);
+			}
 		}
 	}
 

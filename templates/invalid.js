@@ -2,25 +2,24 @@ var Templates = window.Templates || {};
 
 Templates.Invalid = (function(){
 
-	var modal;
+	var created = false;
+	var showing = false;
 
-	var getModal = function(){
-		return $('<div>').attr({
-			'id':'invalid',
-			'class':'modal fade',
-			'data-backdrop':'static'
-		}).html(
-			$('<div>').attr('class', 'modal-dialog').html(
-				$('<div>').attr('class', 'modal-content').html(
-					$('<div>').attr('class', 'modal-body').text('You have opened DotaHost in another tab.')
-				)
+	var modal = $('<div>').attr({
+		'id':'invalid',
+		'class':'modal fade',
+		'data-backdrop':'static'
+	}).html(
+		$('<div>').attr('class', 'modal-dialog').html(
+			$('<div>').attr('class', 'modal-content').html(
+				$('<div>').attr('class', 'modal-body').text('You have opened DotaHost in another tab.')
 			)
 		)
-	}
+	);
 
 	var create = function(){
-		if(!modal){
-			modal = getModal();
+		if(!created){
+			created = true;
 			$('body').append(modal);
 		}
 	}
@@ -28,12 +27,18 @@ Templates.Invalid = (function(){
 	return {
 
 		'show':function(){
-			create();
-			modal.modal('show');
+			if(!showing){
+				showing = true;
+				create();
+				modal.modal('show');
+			}
 		},
 
 		'hide':function(){
-			modal.modal('hide');
+			if(showing){
+				showing = false;
+				modal.modal('hide');
+			}
 		}
 
 	}

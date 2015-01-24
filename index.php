@@ -60,12 +60,12 @@
 	steamLogin();
 
 	// Grab the manager version info
-	$managerVersion = 'UNKNOWN VERSION';
+	$managerDownload = 'UNKNOWN VERSION';
 	if(file_exists('addons\\DotaHostManager.txt')) {
-		$managerVersion = file('addons\\DotaHostManager.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES)[0];
+		$managerDownload = file('addons\\DotaHostManager.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES)[0];
 	}
 ?>
-	var managerVersion = "<?php echo($managerVersion); ?>";
+	var managerDownload = "<?php echo($managerDownload); ?>";
 </script>
 
 <!DOCTYPE html>
@@ -114,38 +114,30 @@
 		<div id="main" class="container-fluid"></div>
 		<iframe id="go" style="display:none"></iframe>
 
-		<script>alert('wtf');</script>
-
 		<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
 		<!-- Latest compiled and minified JavaScript -->
 		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>
 
+		<script src="main.js"></script>
+
 		<script src="templates/addon.js"></script>
 		<script src="templates/addonStatus.js"></script>
 		<script src="templates/chat.js"></script>
 		<script src="templates/cosmetics.js"></script>
-
 		<script src="templates/helpers.js"></script>
-
 		<script src="templates/invalid.js"></script>
-
 		<script src="templates/lobbies.js"></script>
-
-
 		<script src="templates/lobby.js"></script>
 		<script src="templates/lobbyButtons.js"></script>
-
+		<script src="templates/team.js"></script>
 		<script src="templates/player.js"></script>
 		<script src="templates/ready.js"></script>
-
 		<script src="templates/spinner.js"></script>
-		<script src="templates/team.js"></script>
 		<script src="templates/wsdivs.js"></script>
 
 		<script src="templates/landing.js"></script>
 
-		<script src="main.js"></script>
 
 
 		<audio id="readyAudio" src="ready.wav" preload="auto" volume="1.0"></audio>

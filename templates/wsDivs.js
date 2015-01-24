@@ -6,14 +6,14 @@ Templates.WsDivs = (function(){
 	var baseDiv = function(id, okay, strong, weak){
 		
 		// Alert div
-		var alertDiv = $('<div>').attr('class', 'alert alert-success');
+		var alertDiv = $('<div>').attr('class', 'alert alert-' + (okay==null?'info':(okay?'success':'danger')));
 
 		alertDiv.append(
 			// Add Header
-			$('<h4>').text('ModManager')
+			$('<h4>').text((id==='mmStatus'?'ModManager':'Validation'))
 		).append(
 			// Add glyphicon/spinner
-			$('<span>').attr({'class':(okay != null?'glyphicon glyphicon-'+(okay?'ok':'remove'):''), 'style':'position:absolute;left:calc(100% - 50px);top:10px;'}).text((okay==null?Templates.spinner:''))
+			$('<span>').attr({'class':(okay != null?'glyphicon glyphicon-'+(okay?'ok':'remove'):''), 'style':'position:absolute;left:calc(100% - 50px);top:10px;'}).html((okay==null?Templates.spinner:''))
 		).append(
 			// Add first word of desctiption
 			$('<strong>').html(strong)
@@ -66,7 +66,10 @@ Templates.WsDivs = (function(){
 				var weak = $('<span>').html(
 					' to connect to ModManager('
 				).append(
-					$('<a>').attr('href', this['downloadLink']).prop('download', true).text('download')
+					$('<a>').attr({
+						'href':managerDownload,
+						'style':'cursor:pointer;'
+						}).prop('download', true).text('download')
 				).append(
 					')'
 				);
