@@ -1,5 +1,5 @@
 <?php
-$api_key = "***REMOVED***"; // Your Steam WebAPI-Key found at http://steamcommunity.com/dev/apikey
+$api_key = "***REMOVE***"; // Your Steam WebAPI-Key found at http://steamcommunity.com/dev/apikey
 //$domainname = "dotahost.net"; // The main URL of your website displayed in the login page
 $domainname = "localhost"; // The main URL of your website displayed in the login page
 $button_style = "large"; // Style of the login button [small|large_no|large]
